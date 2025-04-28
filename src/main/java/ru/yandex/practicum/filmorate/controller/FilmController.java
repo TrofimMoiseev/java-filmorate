@@ -43,28 +43,28 @@ public class FilmController {
         } else if (!films.containsKey(newFilm.getId())) {
             throw new NotFoundException("Фильм с id = " + newFilm.getId() + " не найден");
         }
-            Film oldFilm = films.get(newFilm.getId());
+        Film oldFilm = films.get(newFilm.getId());
 
-            if (newFilm.getName() != null && !newFilm.getName().isBlank()) {
-                oldFilm.setName(newFilm.getName());
-            }
+        if (newFilm.getName() != null && !newFilm.getName().isBlank()) {
+            oldFilm.setName(newFilm.getName());
+        }
 
-            if (newFilm.getDescription() != null && !newFilm.getDescription().isBlank()) {
-                oldFilm.setDescription(newFilm.getDescription());
-            }
+        if (newFilm.getDescription() != null && !newFilm.getDescription().isBlank()) {
+            oldFilm.setDescription(newFilm.getDescription());
+        }
 
-            if (newFilm.getReleaseDate() != null &&
-                    !newFilm.getReleaseDate().isBefore(LocalDate.of(1895, Month.DECEMBER, 28)) &&
-                    !newFilm.getReleaseDate().isAfter(LocalDate.now())) {
-                oldFilm.setReleaseDate(newFilm.getReleaseDate());
-            }
+        if (newFilm.getReleaseDate() != null &&
+                !newFilm.getReleaseDate().isBefore(LocalDate.of(1895, Month.DECEMBER, 28)) &&
+                !newFilm.getReleaseDate().isAfter(LocalDate.now())) {
+            oldFilm.setReleaseDate(newFilm.getReleaseDate());
+        }
 
-            if (newFilm.getDuration() != null && newFilm.getDuration() > 0) {
-                oldFilm.setDuration(newFilm.getDuration());
-            }
+        if (newFilm.getDuration() != null && newFilm.getDuration() > 0) {
+            oldFilm.setDuration(newFilm.getDuration());
+        }
 
-            log.info("Фильм с ID = {} обновлён", newFilm.getId());
-            return oldFilm;
+        log.info("Фильм с ID = {} обновлён", newFilm.getId());
+        return oldFilm;
     }
 
     private void check(Film newFilm) {

@@ -50,30 +50,30 @@ public class UserController {
             log.warn("Обновление отклонено — пользователь с ID = {} не найден", newUser.getId());
             throw new ConditionsNotMetException("Пользователь с id = " + newUser.getId() + " не найден");
         }
-            User oldUser = users.get(newUser.getId());
+        User oldUser = users.get(newUser.getId());
 
-            if (newUser.getEmail() != null && !newUser.getEmail().isBlank() && !newUser.getEmail().equals(oldUser.getEmail())) {
-                if (users.values().stream().anyMatch(user -> user.equals(newUser))) {
-                    log.warn("Обновление отклонено — email {} уже используется", newUser.getEmail());
-                    throw new ConditionsNotMetException("Этот имейл уже использутся");
-                }
-                oldUser.setEmail(newUser.getEmail());
+        if (newUser.getEmail() != null && !newUser.getEmail().isBlank() && !newUser.getEmail().equals(oldUser.getEmail())) {
+            if (users.values().stream().anyMatch(user -> user.equals(newUser))) {
+                log.warn("Обновление отклонено — email {} уже используется", newUser.getEmail());
+                throw new ConditionsNotMetException("Этот имейл уже использутся");
             }
+            oldUser.setEmail(newUser.getEmail());
+        }
 
-            if (newUser.getLogin() != null && !newUser.getLogin().isBlank()) {
-                oldUser.setLogin(newUser.getLogin());
-            }
+        if (newUser.getLogin() != null && !newUser.getLogin().isBlank()) {
+            oldUser.setLogin(newUser.getLogin());
+        }
 
-            if (newUser.getName() != null && !newUser.getName().isBlank()) {
-                oldUser.setName(newUser.getName());
-            }
+        if (newUser.getName() != null && !newUser.getName().isBlank()) {
+            oldUser.setName(newUser.getName());
+        }
 
-            if (newUser.getBirthday() != null && !newUser.getBirthday().isAfter(LocalDate.now())) {
-                oldUser.setBirthday(newUser.getBirthday());
-            }
+        if (newUser.getBirthday() != null && !newUser.getBirthday().isAfter(LocalDate.now())) {
+            oldUser.setBirthday(newUser.getBirthday());
+        }
 
-            log.info("Пользователь с ID = {} успешно обновлён", newUser.getId());
-            return oldUser;
+        log.info("Пользователь с ID = {} успешно обновлён", newUser.getId());
+        return oldUser;
     }
 
     private void check(User newUser) {
@@ -86,7 +86,7 @@ public class UserController {
         } else if (newUser.getLogin() == null || newUser.getLogin().isBlank()) {
             log.warn("Валидация не пройдена — логин отсутствует");
             throw new ValidationException("Логин указан неверно");
-        } else if (newUser.getBirthday() == null ||newUser.getBirthday().isAfter(LocalDate.now())) {
+        } else if (newUser.getBirthday() == null || newUser.getBirthday().isAfter(LocalDate.now())) {
             log.warn("Валидация не пройдена — дата рождения в будущем: {}", newUser.getBirthday());
             throw new ValidationException("Дата рождения указана неверно");
         }

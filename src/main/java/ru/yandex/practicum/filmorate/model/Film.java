@@ -6,7 +6,7 @@ import lombok.EqualsAndHashCode;
 import java.time.LocalDate;
 
 @Data
-@EqualsAndHashCode(of ={"id"})
+@EqualsAndHashCode(of = {"id"})
 public class Film {
     private Long id;
     private String name;
