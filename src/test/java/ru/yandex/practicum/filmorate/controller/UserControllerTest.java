@@ -68,9 +68,8 @@ public class UserControllerTest {
         invalidUser.setName("Пользователь");
         invalidUser.setBirthday(LocalDate.of(2000, 1, 1));
 
-        ValidationException exception = assertThrows(ValidationException.class, () -> {
-            userController.create(invalidUser);
-        });
+        ValidationException exception = assertThrows(ValidationException.class, () ->
+            userController.create(invalidUser));
 
         assertEquals("Имейл указан неверно", exception.getMessage());
     }
@@ -91,9 +90,8 @@ public class UserControllerTest {
         secondUser.setName("Пользователь 2");
         secondUser.setBirthday(LocalDate.of(2001, 1, 1));
 
-        ValidationException exception = assertThrows(ValidationException.class, () -> {
-            userController.create(secondUser);
-        });
+        ValidationException exception = assertThrows(ValidationException.class, () ->
+            userController.create(secondUser));
 
         assertEquals("Этот имейл уже использутся", exception.getMessage());
     }
@@ -106,9 +104,8 @@ public class UserControllerTest {
         invalidUser.setName("Корректное Имя");
         invalidUser.setBirthday(LocalDate.of(2000, 1, 1));
 
-        ValidationException exception = assertThrows(ValidationException.class, () -> {
-            userController.create(invalidUser);
-        });
+        ValidationException exception = assertThrows(ValidationException.class, () ->
+            userController.create(invalidUser));
 
         assertEquals("Логин указан неверно", exception.getMessage());
     }
@@ -121,9 +118,8 @@ public class UserControllerTest {
         invalidUser.setName("Пользователь");
         invalidUser.setBirthday(LocalDate.of(2100, 1, 1));  // Некорректная дата рождения
 
-        ValidationException exception = assertThrows(ValidationException.class, () -> {
-            userController.create(invalidUser);
-        });
+        ValidationException exception = assertThrows(ValidationException.class, () ->
+            userController.create(invalidUser));
 
         assertEquals("Дата рождения указана неверно", exception.getMessage());
     }
@@ -137,9 +133,8 @@ public class UserControllerTest {
         nonExistentUser.setName("Пользователь Не Существует");
         nonExistentUser.setBirthday(LocalDate.of(2000, 1, 1));
 
-        ConditionsNotMetException exception = assertThrows(ConditionsNotMetException.class, () -> {
-            userController.update(nonExistentUser);
-        });
+        ConditionsNotMetException exception = assertThrows(ConditionsNotMetException.class, () ->
+            userController.update(nonExistentUser));
 
         assertEquals("Пользователь с id = 999 не найден", exception.getMessage());
     }
@@ -152,9 +147,8 @@ public class UserControllerTest {
         userToUpdate.setName("Пользователь");
         userToUpdate.setBirthday(LocalDate.of(2000, 1, 1));
 
-        ConditionsNotMetException exception = assertThrows(ConditionsNotMetException.class, () -> {
-            userController.update(userToUpdate);  // Нет ID для обновления
-        });
+        ConditionsNotMetException exception = assertThrows(ConditionsNotMetException.class, () ->
+                userController.update(userToUpdate));  // Нет ID для обновления
 
         assertEquals("Id не указан", exception.getMessage());
     }

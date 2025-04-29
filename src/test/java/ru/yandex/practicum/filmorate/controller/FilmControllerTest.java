@@ -73,7 +73,8 @@ public class FilmControllerTest {
         invalidFilm.setReleaseDate(LocalDate.of(2000, 1, 1));
         invalidFilm.setDuration(-1);  // Некорректная продолжительность
 
-        ValidationException exception = assertThrows(ValidationException.class, () -> filmController.create(invalidFilm));
+        ValidationException exception = assertThrows(ValidationException.class, () ->
+                filmController.create(invalidFilm));
 
         assertEquals("Продолжительность указана неверно", exception.getMessage());
     }
@@ -87,9 +88,8 @@ public class FilmControllerTest {
         invalidFilm.setReleaseDate(LocalDate.of(2000, 1, 1));
         invalidFilm.setDuration(100);
 
-        ValidationException exception = assertThrows(ValidationException.class, () -> {
-            filmController.create(invalidFilm);
-        });
+        ValidationException exception = assertThrows(ValidationException.class, () ->
+                filmController.create(invalidFilm));
 
         assertEquals("Имя указано неверно", exception.getMessage());
     }
@@ -103,9 +103,8 @@ public class FilmControllerTest {
         invalidFilm.setReleaseDate(LocalDate.of(1800, 1, 1));  // Некорректная дата релиза
         invalidFilm.setDuration(100);
 
-        ValidationException exception = assertThrows(ValidationException.class, () -> {
-            filmController.create(invalidFilm);
-        });
+        ValidationException exception = assertThrows(ValidationException.class, () ->
+                filmController.create(invalidFilm));
 
         assertEquals("Дата релиза указана неверно", exception.getMessage());
     }
@@ -120,9 +119,8 @@ public class FilmControllerTest {
         nonExistentFilm.setReleaseDate(LocalDate.of(2000, 1, 1));
         nonExistentFilm.setDuration(100);
 
-        NotFoundException exception = assertThrows(NotFoundException.class, () -> {
-            filmController.update(nonExistentFilm);
-        });
+        NotFoundException exception = assertThrows(NotFoundException.class, () ->
+                filmController.update(nonExistentFilm));
 
         assertEquals("Фильм с id = 999 не найден", exception.getMessage());
     }

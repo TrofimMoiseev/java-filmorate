@@ -54,7 +54,7 @@ public class UserController {
         User oldUser = users.get(newUser.getId());
 
         if (newUser.getEmail() != null && !newUser.getEmail().isBlank() && !newUser.getEmail().equals(oldUser.getEmail())) {
-            if (users.values().stream().anyMatch(user -> user.equals(newUser))) {
+            if (users.values().stream().anyMatch(user -> user.getEmail().equals(newUser.getEmail()))) {
                 log.warn("Обновление отклонено — email {} уже используется", newUser.getEmail());
                 throw new ConditionsNotMetException("Этот имейл уже использутся");
             }
@@ -81,7 +81,7 @@ public class UserController {
         if (newUser.getEmail() == null || newUser.getEmail().isBlank() || !newUser.getEmail().contains("@")) {
             log.warn("Валидация не пройдена — некорректный email: {}", newUser.getEmail());
             throw new ValidationException("Имейл указан неверно");
-        } else if (users.values().stream().anyMatch(user -> user.equals(newUser))) {
+        } else if (users.values().stream().anyMatch(user -> user.getEmail().equals(newUser.getEmail()))) {
             log.warn("Валидация не пройдена — email уже используется: {}", newUser.getEmail());
             throw new ValidationException("Этот имейл уже использутся");
         } else if (newUser.getLogin() == null || newUser.getLogin().isBlank()) {
