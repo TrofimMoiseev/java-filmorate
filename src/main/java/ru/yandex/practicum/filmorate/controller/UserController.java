@@ -15,6 +15,7 @@ import java.util.Map;
 @RequestMapping("/users")
 public class UserController {
 
+    private Long sequence = 0L;
     private final Map<Long, User> users = new HashMap<>();
 
     @GetMapping
@@ -33,7 +34,7 @@ public class UserController {
             newUser.setName(newUser.getLogin());
         }
 
-        newUser.setId(getNextId());
+        newUser.setId(getSequence());
         users.put(newUser.getId(), newUser);
         log.info("Пользователь успешно создан с ID = {}", newUser.getId());
         return newUser;
@@ -92,12 +93,8 @@ public class UserController {
         }
     }
 
-    private long getNextId() {
-        long currentMaxId = users.keySet()
-                .stream()
-                .mapToLong(id -> id)
-                .max()
-                .orElse(0);
-        return ++currentMaxId;
+    private Long getSequence() {  //Счетчик задач
+        sequence++;
+        return sequence;
     }
 }

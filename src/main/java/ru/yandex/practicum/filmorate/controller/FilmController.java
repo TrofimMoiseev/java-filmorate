@@ -16,6 +16,7 @@ import java.util.Map;
 @RequestMapping("/films")
 public class FilmController {
 
+    private Long sequence = 0L;
     private final Map<Long, Film> films = new HashMap<>();
 
     @GetMapping
@@ -28,7 +29,7 @@ public class FilmController {
     public Film create(@RequestBody Film newFilm) {
         log.info("Получен POST-запрос на добавление фильма: {}", newFilm);
         check(newFilm);
-        newFilm.setId(getNextId());
+        newFilm.setId(getSequence());
         films.put(newFilm.getId(), newFilm);
         log.info("Фильм успешно добавлен с ID = {}", newFilm.getId());
         return newFilm;
@@ -85,12 +86,8 @@ public class FilmController {
         }
     }
 
-    private long getNextId() {
-        long currentMaxId = films.keySet()
-                .stream()
-                .mapToLong(id -> id)
-                .max()
-                .orElse(0);
-        return ++currentMaxId;
+    protected Long getSequence() {  //Счетчик задач
+        sequence++;
+        return sequence;
     }
 }

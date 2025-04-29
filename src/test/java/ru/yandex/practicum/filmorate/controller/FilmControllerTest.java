@@ -73,9 +73,7 @@ public class FilmControllerTest {
         invalidFilm.setReleaseDate(LocalDate.of(2000, 1, 1));
         invalidFilm.setDuration(-1);  // Некорректная продолжительность
 
-        ValidationException exception = assertThrows(ValidationException.class, () -> {
-            filmController.create(invalidFilm);
-        });
+        ValidationException exception = assertThrows(ValidationException.class, () -> filmController.create(invalidFilm));
 
         assertEquals("Продолжительность указана неверно", exception.getMessage());
     }
