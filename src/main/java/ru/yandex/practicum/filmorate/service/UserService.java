@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.service;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -55,7 +54,7 @@ public class UserService {
         return userStorage.create(user);
     }
 
-    public User update( User user) {
+    public User update(User user) {
         log.info("Получен PUT-запрос на обновление пользователя: {}", user);
 
         if (user.getId() == null) {
