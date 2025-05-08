@@ -66,11 +66,19 @@ public class UserService {
 
     public void putFriend(Long userId, Long friendId) {
         log.info("Обработка PUT-запроса на добавление друга");
+        if (userId.equals(friendId)) {
+            log.warn("Нельзя добавить самого себя в друзья");
+            throw new ConditionsNotMetException("Нельзя добавить самого себя в друзья");
+        }
         userStorage.putFriend(userId, friendId);
     }
 
     public void deleteFriend(Long userId, Long friendId) {
         log.info("Обработка Delete-запроса на удаление друга");
+        if (userId.equals(friendId)) {
+            log.warn("Нельзя удалить самого себя из друзей");
+            throw new ConditionsNotMetException("Нельзя удалить самого себя из друзей");
+        }
         userStorage.deleteFriend(userId, friendId);
     }
 

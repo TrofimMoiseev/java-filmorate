@@ -14,10 +14,10 @@ import java.util.stream.Collectors;
 @Component
 public class InMemoryUserStorage implements UserStorage {
     private final Map<Long, User> users = new HashMap<>();
-    private Long sequence = 1L;
+    private Long sequence = 0L;
 
     private Long getSequence() {
-        return sequence++;
+        return ++sequence;
     }
 
     @Override
@@ -40,8 +40,14 @@ public class InMemoryUserStorage implements UserStorage {
         if (!users.containsKey(id)) {
             throw new NotFoundException("Пользователь с id = " + id + " не найден");
         }
-        log.info("Список предоставлен. Текущее количество друзей {}.", users.get(id).getFriends().size());
-        return users.get(id).getFriends();
+        Set<Long> friendIds = users.get(id).getFriends();
+
+        Collection<User> friends = friendIds.stream()
+                .map(users::get)  // Получаем объект User по ID
+                .collect(Collectors.toList());
+
+        log.info("Список предоставлен. Текущее количество друзей {}.", friends.size());
+        return friends;
     }
 
     @Override
@@ -52,10 +58,19 @@ public class InMemoryUserStorage implements UserStorage {
         if (!users.containsKey(otherId)) {
             throw new NotFoundException("Пользователь с id = " + otherId + " не найден");
         }
-        log.info("Список предоставлен.");
-        return users.get(userId).getFriends().stream()
-                .filter(users.get(otherId).getFriends()::contains)
+
+        Set<Long> userFriends = users.get(userId).getFriends();
+        Set<Long> otherUserFriends = users.get(otherId).getFriends();
+
+        Set<Long> commonFriendIds = new HashSet<>(userFriends);
+        commonFriendIds.retainAll(otherUserFriends); // Оставляем только общие ID
+
+        Collection<User> commonFriends = commonFriendIds.stream()
+                .map(users::get)
                 .collect(Collectors.toList());
+
+        log.info("Общие друзья пользователей с id = {} и id = {}: {}", userId, otherId, commonFriends.size());
+        return commonFriends;
     }
 
     @Override
@@ -110,12 +125,8 @@ public class InMemoryUserStorage implements UserStorage {
         User user = users.get(userId);
         User friend = users.get(friendId);
 
-        if (user.getFriends().contains(friend)) {
-            throw new NotFoundException("Пользователь с id = " + friendId + " уже в друзьях");
-        }
-
-        user.getFriends().add(friend);
-        friend.getFriends().add(user);
+        user.getFriends().add(friendId);
+        friend.getFriends().add(userId);
         log.info("Пользователь с ID = {} добавил в друзья пользователя с ID = {}", userId, friendId);
     }
 
@@ -132,12 +143,8 @@ public class InMemoryUserStorage implements UserStorage {
         User user = users.get(userId);
         User friend = users.get(friendId);
 
-        if (!user.getFriends().contains(friend)) {
-            throw new NotFoundException("Пользователя с id = " + friendId + " нет в друзьях");
-        }
-
-        user.getFriends().remove(friend);
-        friend.getFriends().remove(user);
+        user.getFriends().remove(friendId);
+        friend.getFriends().remove(userId);
         log.info("Пользователь с ID = {} удалил из друзей пользователя с ID = {}", userId, friendId);
     }
 

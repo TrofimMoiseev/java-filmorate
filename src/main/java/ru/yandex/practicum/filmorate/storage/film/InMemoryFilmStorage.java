@@ -14,10 +14,10 @@ import java.util.stream.Collectors;
 @Component
 public class InMemoryFilmStorage implements FilmStorage { //логика хранения
     private final Map<Long, Film> films = new HashMap<>();
-    private Long sequence = 1L;
+    private Long sequence = 0L;
 
     private Long getSequence() {
-        return sequence++;
+        return ++sequence;
     }
 
     @Override
