@@ -1,30 +1,33 @@
 package ru.yandex.practicum.filmorate.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
-    UserStorage userStorage;
-
-    @Autowired
-    public UserService(UserStorage userStorage) {
-        this.userStorage = userStorage;
-    }
+    private final UserStorage userStorage;
 
     public User findUserById(Long id) {
         log.info("Обработка GET-запроса на получение пользователя по id.");
+        if (!userStorage.checkId(id)) {
+            throw new NotFoundException("Пользователь с id = " + id + " не найден");
+        }
         return userStorage.findUserById(id);
     }
 
@@ -34,12 +37,39 @@ public class UserService {
     }
 
     public Collection<User> getFriends(Long id) {
-        log.info("Обработка GET-запроса на получение всех друзей пользователя {}.", id);
-        return userStorage.getFriends(id);
+        if (!userStorage.checkId(id)) {
+            throw new NotFoundException("Пользователь с id = " + id + " не найден");
+        }
+        Set<Long> friendIds = userStorage.findUserById(id).getFriends();
+
+        Collection<User> friends = friendIds.stream()
+                .map(userStorage::findUserById)
+                .collect(Collectors.toList());
+
+        log.info("Список предоставлен. Текущее количество друзей {}.", friends.size());
+        return friends;
     }
 
     public Collection<User> getCommonFriends(Long userId, Long otherId) {
-        return userStorage.getCommonFriends(userId, otherId);
+        if (!userStorage.checkId(userId)) {
+            throw new NotFoundException("Пользователь с id = " + userId + " не найден");
+        }
+        if (!userStorage.checkId(otherId)) {
+            throw new NotFoundException("Пользователь с id = " + otherId + " не найден");
+        }
+
+        Set<Long> userFriends = userStorage.findUserById(userId).getFriends();
+        Set<Long> otherUserFriends = userStorage.findUserById(otherId).getFriends();
+
+        Set<Long> commonFriendIds = new HashSet<>(userFriends);
+        commonFriendIds.retainAll(otherUserFriends);
+
+        Collection<User> commonFriends = commonFriendIds.stream()
+                .map(userStorage::findUserById)
+                .collect(Collectors.toList());
+
+        log.info("Общие друзья пользователей с id = {} и id = {}: {}", userId, otherId, commonFriends.size());
+        return commonFriends;
     }
 
     public User create(User user) {
@@ -54,32 +84,73 @@ public class UserService {
         return userStorage.create(user);
     }
 
-    public User update(User user) {
-        log.info("Получен PUT-запрос на обновление пользователя: {}", user);
+    public User update(User newUser) {
+        log.info("Получен PUT-запрос на обновление пользователя: {}", newUser);
 
-        if (user.getId() == null) {
+        if (newUser.getId() == null) {
             log.warn("Обновление отклонено — ID не указан");
             throw new ConditionsNotMetException("Id не указан");
         }
-        return userStorage.update(user);
+
+        if (!userStorage.checkId(newUser.getId())) {
+            throw new NotFoundException("Пользователь с id = " + newUser.getId() + " не найден");
+        }
+        User user = userStorage.findUserById(newUser.getId());
+
+        if (newUser.getEmail() != null && !newUser.getEmail().isBlank() && !newUser.getEmail().equals(user.getEmail())) {
+            if (userStorage.findAll().stream().anyMatch(anyUser -> anyUser.getEmail().equals(newUser.getEmail()))) {
+                log.warn("Обновление отклонено — email {} уже используется", newUser.getEmail());
+                throw new ConditionsNotMetException("Этот имейл уже использутся");
+            }
+            user.setEmail(newUser.getEmail());
+        }
+
+        if (newUser.getLogin() != null && !newUser.getLogin().isBlank()) {
+            user.setLogin(newUser.getLogin());
+        }
+
+        if (newUser.getName() != null && !newUser.getName().isBlank()) {
+            user.setName(newUser.getName());
+        }
+
+        if (newUser.getBirthday() != null && !newUser.getBirthday().isAfter(LocalDate.now())) {
+            user.setBirthday(newUser.getBirthday());
+        }
+        return userStorage.update(newUser);
     }
 
     public void putFriend(Long userId, Long friendId) {
-        log.info("Обработка PUT-запроса на добавление друга");
-        if (userId.equals(friendId)) {
-            log.warn("Нельзя добавить самого себя в друзья");
-            throw new ConditionsNotMetException("Нельзя добавить самого себя в друзья");
+        if (!userStorage.checkId(userId)) {
+            throw new NotFoundException("Пользователь с id = " + userId + " не найден");
         }
-        userStorage.putFriend(userId, friendId);
+
+        if (!userStorage.checkId(friendId)) {
+            throw new NotFoundException("Пользователь с id = " + friendId + " не найден");
+        }
+
+        User user = userStorage.findUserById(userId);
+        User friend = userStorage.findUserById(friendId);
+
+        user.getFriends().add(friendId);
+        friend.getFriends().add(userId);
+        log.info("Пользователь с ID = {} добавил в друзья пользователя с ID = {}", userId, friendId);
     }
 
     public void deleteFriend(Long userId, Long friendId) {
-        log.info("Обработка Delete-запроса на удаление друга");
-        if (userId.equals(friendId)) {
-            log.warn("Нельзя удалить самого себя из друзей");
-            throw new ConditionsNotMetException("Нельзя удалить самого себя из друзей");
+        if (!userStorage.checkId(userId)) {
+            throw new NotFoundException("Пользователь с id = " + userId + " не найден");
         }
-        userStorage.deleteFriend(userId, friendId);
+
+        if (!userStorage.checkId(friendId)) {
+            throw new NotFoundException("Пользователь с id = " + friendId + " не найден");
+        }
+
+        User user = userStorage.findUserById(userId);
+        User friend = userStorage.findUserById(friendId);
+
+        user.getFriends().remove(friendId);
+        friend.getFriends().remove(userId);
+        log.info("Пользователь с ID = {} удалил из друзей пользователя с ID = {}", userId, friendId);
     }
 
     private void check(User newUser) {

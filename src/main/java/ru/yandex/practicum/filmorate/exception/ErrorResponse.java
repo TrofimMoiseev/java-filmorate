@@ -1,16 +1,11 @@
 package ru.yandex.practicum.filmorate.exception;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 
-@Getter
-@Setter
-public class ErrorResponse {
-    String error;
-    String details;
-
-    public ErrorResponse(String error, String details) {
-        this.error = error;
-        this.details = details;
-    }
+@Data
+@AllArgsConstructor
+public class ErrorResponse { //предлагает класс record сделать нужно ли?
+    private final String error;
+    private final String details;
 }

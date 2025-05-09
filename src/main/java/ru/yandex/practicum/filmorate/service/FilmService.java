@@ -1,6 +1,6 @@
 package ru.yandex.practicum.filmorate.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
@@ -17,19 +17,18 @@ import java.util.Collection;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class FilmService { //логика обработки запросов
 
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
 
-    @Autowired
-    public FilmService(FilmStorage filmStorage, UserStorage userStorage) {
-        this.filmStorage = filmStorage;
-        this.userStorage = userStorage;
-    }
-
     public Film findFilmById(Long id) {
         log.info("Обработка GET-запроса на получение фильма по айди.");
+        if (!filmStorage.checkId(id)) {
+            log.warn("Фильм с id = {}, не найден", id);
+            throw new NotFoundException("Фильм с id = " + id + " не найден");
+        }
         return filmStorage.findFilmById(id);
     }
 
@@ -49,27 +48,77 @@ public class FilmService { //логика обработки запросов
         return filmStorage.create(film);
     }
 
-    public Film update(Film film) {
-        log.info("Обработка PUT-запрос на обновление фильма: {}", film);
-        if (film.getId() == null) {
+    public Film update(Film newFilm) {
+        log.info("Обработка PUT-запрос на обновление фильма: {}", newFilm);
+        if (newFilm.getId() == null) {
             log.warn("Обновление отклонено — ID не указан");
             throw new ConditionsNotMetException("Id не указан");
+        }
+        if (!filmStorage.checkId(newFilm.getId())) {
+            log.warn("Фильм с id = {}, не найден", newFilm.getId());
+            throw new NotFoundException("Фильм с id = " + newFilm.getId() + " не найден");
+        }
+        Film film = filmStorage.findFilmById(newFilm.getId());
+
+        if (newFilm.getName() != null && !newFilm.getName().isBlank()) {
+            film.setName(newFilm.getName());
+        }
+
+        if (newFilm.getDescription() != null && !newFilm.getDescription().isBlank()) {
+            film.setDescription(newFilm.getDescription());
+        }
+
+        if (newFilm.getReleaseDate() != null &&
+                !newFilm.getReleaseDate().isBefore(LocalDate.of(1895, Month.DECEMBER, 28)) &&
+                !newFilm.getReleaseDate().isAfter(LocalDate.now())) {
+            film.setReleaseDate(newFilm.getReleaseDate());
+        }
+
+        if (newFilm.getDuration() != null && newFilm.getDuration() > 0) {
+            film.setDuration(newFilm.getDuration());
         }
         return filmStorage.update(film);
     }
 
     public void putLike(Long filmId, Long userId) {
-        log.info("Обработка PUT-запроса на постановку лайка");
+        if (!filmStorage.checkId(filmId)) {
+            log.warn("Фильм с id = {}, не найден", filmId);
+            throw new NotFoundException("Фильм с id = " + filmId + " не найден");
+        }
+
         if (!userStorage.checkId(userId)) {
             log.warn("Пользователь с id = {}, не найден", userId);
             throw new NotFoundException("Пользователь с id = " + userId + " не найден");
         }
-        filmStorage.putLike(filmId, userId);
+
+        Film film = filmStorage.findFilmById(filmId);
+
+        if (film.getLikes().contains(userId)) {
+            log.warn("Фильм с id = {}, лайк уже поставлен", filmId);
+            throw new NotFoundException("Фильму с id = " + filmId + " лайк уже поставлен.");
+        }
+        log.info("Лайк поставлен фильму с id {}.", filmId);
+        film.getLikes().add(userId);
     }
 
     public void deleteLike(Long filmId, Long userId) {
-        log.info("Обработка Delete-запроса на удаление лайка");
-        filmStorage.deleteLike(filmId, userId);
+        if (!filmStorage.checkId(filmId)) {
+            log.warn("Фильм с id = {}, не найден", filmId);
+            throw new NotFoundException("Фильм с id = " + filmId + " не найден");
+        }
+
+        if (!userStorage.checkId(userId)) {
+            log.warn("Пользователь с id = {}, не найден", userId);
+            throw new NotFoundException("Пользователь с id = " + userId + " не найден");
+        }
+
+        Film film = filmStorage.findFilmById(filmId);
+        if (!film.getLikes().contains(userId)) {
+            log.warn("Фильм с id = {}, лайк не поставлен", filmId);
+            throw new NotFoundException("Фильму с id = " + filmId + " лайк не поставлен.");
+        }
+        log.info("Лайк фильму с id {}, удален.", filmId);
+        film.getLikes().remove(userId);
     }
 
     private void check(Film film) {
