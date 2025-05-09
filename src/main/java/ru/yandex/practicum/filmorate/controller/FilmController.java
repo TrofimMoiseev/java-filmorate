@@ -1,93 +1,73 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.exception.*;
+import ru.yandex.practicum.filmorate.service.FilmService;
 
-import java.time.LocalDate;
-import java.time.Month;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+
 
 @Slf4j
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/films")
-public class FilmController {
+public class FilmController { //работа с запросами
 
-    private Long sequence = 0L;
-    private final Map<Long, Film> films = new HashMap<>();
+    private final FilmService filmService;
+
+    @GetMapping("/{id}")
+    public Film findFilmById(
+            @PathVariable Long id
+    ) {
+        log.info("Получен GET-запрос на получение фильма по айди.");
+        return filmService.findFilmById(id);
+    }
 
     @GetMapping
     public Collection<Film> findAll() {
-        log.info("Получен GET-запрос на получение всех фильмов. Текущее количество: {}", films.size());
-        return films.values();
+        log.info("Получен GET-запрос на получение всех фильмов.");
+        return filmService.findAll();
     }
 
+    @GetMapping("/popular")
+    public Collection<Film> findPopular(@RequestParam(required = false, defaultValue = "10") Long count) {
+        log.info("Получен GET-запрос на получение популярных фильмов.");
+        return filmService.findPopular(count);
+    }
+
+    @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
-    public Film create(@RequestBody Film newFilm) {
-        log.info("Получен POST-запрос на добавление фильма: {}", newFilm);
-        check(newFilm);
-        newFilm.setId(getSequence());
-        films.put(newFilm.getId(), newFilm);
-        log.info("Фильм успешно добавлен с ID = {}", newFilm.getId());
-        return newFilm;
+    public Film create(@RequestBody Film film) {
+        log.info("Получен POST-запрос на добавление фильма: {}", film);
+        return filmService.create(film);
     }
 
     @PutMapping
-    public Film update(@RequestBody Film newFilm) {
-        log.info("Получен PUT-запрос на обновление фильма: {}", newFilm);
-        if (newFilm.getId() == null) {
-            log.warn("Обновление отклонено — ID не указан");
-            throw new ConditionsNotMetException("Id не указан");
-        } else if (!films.containsKey(newFilm.getId())) {
-            throw new NotFoundException("Фильм с id = " + newFilm.getId() + " не найден");
-        }
-        Film oldFilm = films.get(newFilm.getId());
-
-        if (newFilm.getName() != null && !newFilm.getName().isBlank()) {
-            oldFilm.setName(newFilm.getName());
-        }
-
-        if (newFilm.getDescription() != null && !newFilm.getDescription().isBlank()) {
-            oldFilm.setDescription(newFilm.getDescription());
-        }
-
-        if (newFilm.getReleaseDate() != null &&
-                !newFilm.getReleaseDate().isBefore(LocalDate.of(1895, Month.DECEMBER, 28)) &&
-                !newFilm.getReleaseDate().isAfter(LocalDate.now())) {
-            oldFilm.setReleaseDate(newFilm.getReleaseDate());
-        }
-
-        if (newFilm.getDuration() != null && newFilm.getDuration() > 0) {
-            oldFilm.setDuration(newFilm.getDuration());
-        }
-
-        log.info("Фильм с ID = {} обновлён", newFilm.getId());
-        return oldFilm;
+    public Film update(@RequestBody Film film) {
+        log.info("Получен PUT-запрос на обновление фильма: {}", film);
+        return filmService.update(film);
     }
 
-    private void check(Film newFilm) {
-        if (newFilm.getName() == null || newFilm.getName().isBlank()) {
-            log.warn("Валидация не пройдена — имя фильма отсутствует");
-            throw new ValidationException("Имя указано неверно");
-        } else if (newFilm.getDescription() == null || newFilm.getDescription().length() > 200) {
-            log.warn("Валидация не пройдена — описание превышает 200 символов");
-            throw new ValidationException("Количество символов превышает допустимого");
-        } else if (newFilm.getReleaseDate() == null ||
-                newFilm.getReleaseDate().isBefore(LocalDate.of(1895, Month.DECEMBER, 28)) ||
-                newFilm.getReleaseDate().isAfter(LocalDate.now())) {
-            log.warn("Валидация не пройдена — слишком старая дата релиза: {}", newFilm.getReleaseDate());
-            throw new ValidationException("Дата релиза указана неверно");
-        } else if (newFilm.getDuration() == null || newFilm.getDuration() <= 0) {
-            log.warn("Валидация не пройдена — неверная продолжительность: {}", newFilm.getDuration());
-            throw new ValidationException("Продолжительность указана неверно");
-        }
+    @PutMapping("/{id}/like/{userId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void putLike(
+            @PathVariable("id") Long filmId,
+            @PathVariable Long userId
+    ) {
+        log.info("Получен PUT-запрос на постановку лайка");
+        filmService.putLike(filmId, userId);
     }
 
-    protected Long getSequence() {  //Счетчик задач
-        sequence++;
-        return sequence;
+    @DeleteMapping("/{id}/like/{userId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteLike(
+            @PathVariable("id") Long filmId,
+            @PathVariable Long userId
+    ) {
+        log.info("Получен Delete-запрос на удаление лайка");
+        filmService.deleteLike(filmId, userId);
     }
 }

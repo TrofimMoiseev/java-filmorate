@@ -5,6 +5,12 @@ import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
+import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.time.LocalDate;
 import java.util.Collection;
@@ -18,13 +24,22 @@ public class FilmControllerTest {
 
     @BeforeEach
     void setUp() {
-        // Подготовка тестовых данных
-        filmController = new FilmController();
+        FilmStorage filmStorage = new InMemoryFilmStorage();
+        UserStorage userStorage = new InMemoryUserStorage();
+        FilmService filmService = new FilmService(filmStorage, userStorage);
+        filmController = new FilmController(filmService);
         film = new Film();
         film.setName("Тестовый фильм");
         film.setDescription("Тестовое описание");
         film.setReleaseDate(LocalDate.of(2000, 1, 1));
         film.setDuration(120);
+        User user = new User();
+        user.setEmail("test@example.com");
+        user.setLogin("Логин");
+        user.setName("Пользователь");
+        user.setBirthday(LocalDate.of(2000, 1, 1));
+        userStorage.create(user);
+
     }
 
     @Test
@@ -123,5 +138,87 @@ public class FilmControllerTest {
                 filmController.update(nonExistentFilm));
 
         assertEquals("Фильм с id = 999 не найден", exception.getMessage());
+    }
+
+    @Test
+    void getPopularFilms() {
+        filmController.create(film);
+        Film popularFilm = new Film();
+        popularFilm.setName("Популярный фильм");
+        popularFilm.setDescription("Описание");
+        popularFilm.setReleaseDate(LocalDate.of(2000, 1, 1));
+        popularFilm.setDuration(90);
+        filmController.create(popularFilm);  // Этот фильм будет популярным
+
+        Collection<Film> popularFilms = filmController.findPopular(10L);
+
+        assertNotNull(popularFilms);
+        assertTrue(popularFilms.size() >= 1);  // Должен быть хотя бы один фильм
+    }
+
+    @Test
+    void putLike_shouldAddLikeIfFilmExists() {
+        filmController.create(film);
+        Long userId = 1L;
+        filmController.putLike(film.getId(), userId);
+
+        assertTrue(film.getLikes().contains(userId), "Лайк не был добавлен.");
+    }
+
+    @Test
+    void putLike_shouldThrowExceptionIfLikeAlreadyExists() {
+        filmController.create(film);
+        Long userId = 1L;
+        filmController.putLike(film.getId(), userId);
+
+        NotFoundException exception = assertThrows(NotFoundException.class, () ->
+                filmController.putLike(film.getId(), userId));
+
+        assertEquals("Фильму с id = " + film.getId() + " лайк уже поставлен.", exception.getMessage());
+    }
+
+    @Test
+    void putLike_shouldThrowExceptionIfFilmNotFound() {
+        Long nonExistentFilmId = 999L;
+        Long userId = 1L;
+
+        NotFoundException exception = assertThrows(NotFoundException.class, () ->
+                filmController.putLike(nonExistentFilmId, userId));
+
+        assertEquals("Фильм с id = " + nonExistentFilmId + " не найден", exception.getMessage());
+    }
+
+    // Тест на удаление лайка
+    @Test
+    void deleteLike_shouldRemoveLikeIfFilmAndLikeExist() {
+        filmController.create(film);
+        Long userId = 1L;
+        filmController.putLike(film.getId(), userId);  // Ставим лайк
+
+        filmController.deleteLike(film.getId(), userId);
+
+        assertFalse(film.getLikes().contains(userId), "Лайк не был удален.");
+    }
+
+    @Test
+    void deleteLike_shouldThrowExceptionIfLikeNotFound() {
+        filmController.create(film);
+        Long userId = 1L;
+
+        NotFoundException exception = assertThrows(NotFoundException.class, () ->
+                filmController.deleteLike(film.getId(), userId));
+
+        assertEquals("Фильму с id = " + film.getId() + " лайк не поставлен.", exception.getMessage());
+    }
+
+    @Test
+    void deleteLike_shouldThrowExceptionIfFilmNotFound() {
+        Long nonExistentFilmId = 999L;  // Несуществующий id фильма
+        Long userId = 1L;
+
+        NotFoundException exception = assertThrows(NotFoundException.class, () ->
+                filmController.deleteLike(nonExistentFilmId, userId));
+
+        assertEquals("Фильм с id = " + nonExistentFilmId + " не найден", exception.getMessage());
     }
 }

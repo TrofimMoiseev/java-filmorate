@@ -2,9 +2,13 @@ package ru.yandex.practicum.filmorate.controller;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.time.LocalDate;
 import java.util.Collection;
@@ -14,11 +18,14 @@ import static org.junit.jupiter.api.Assertions.*;
 public class UserControllerTest {
 
     private UserController userController;
+
     private User user;
 
     @BeforeEach
     void setUp() {
-        userController = new UserController();
+        UserStorage userStorage = new InMemoryUserStorage();
+        UserService userService = new UserService(userStorage);
+        userController = new UserController(userService);
         user = new User();
         user.setEmail("test@example.com");
         user.setLogin("Логин");
@@ -133,7 +140,7 @@ public class UserControllerTest {
         nonExistentUser.setName("Пользователь Не Существует");
         nonExistentUser.setBirthday(LocalDate.of(2000, 1, 1));
 
-        ConditionsNotMetException exception = assertThrows(ConditionsNotMetException.class, () ->
+        NotFoundException exception = assertThrows(NotFoundException.class, () ->
             userController.update(nonExistentUser));
 
         assertEquals("Пользователь с id = 999 не найден", exception.getMessage());
@@ -151,5 +158,130 @@ public class UserControllerTest {
                 userController.update(userToUpdate));  // Нет ID для обновления
 
         assertEquals("Id не указан", exception.getMessage());
+    }
+
+    @Test
+    void addFriend() {
+        User user1 = new User();
+        user1.setEmail("friend1@example.com");
+        user1.setLogin("friend1");
+        user1.setName("Friend 1");
+        user1.setBirthday(LocalDate.of(1990, 1, 1));
+
+        User user2 = new User();
+        user2.setEmail("friend2@example.com");
+        user2.setLogin("friend2");
+        user2.setName("Friend 2");
+        user2.setBirthday(LocalDate.of(1991, 1, 1));
+
+        userController.create(user1);
+        userController.create(user2);
+
+        userController.putFriend(user1.getId(), user2.getId());
+
+        assertTrue(userController.getFriends(user1.getId()).contains(user2));
+        assertTrue(userController.getFriends(user2.getId()).contains(user1));
+    }
+
+    @Test
+    void removeFriend() {
+        User user1 = new User();
+        user1.setEmail("friend1@example.com");
+        user1.setLogin("friend1");
+        user1.setName("Friend 1");
+        user1.setBirthday(LocalDate.of(1990, 1, 1));
+
+        User user2 = new User();
+        user2.setEmail("friend2@example.com");
+        user2.setLogin("friend2");
+        user2.setName("Friend 2");
+        user2.setBirthday(LocalDate.of(1991, 1, 1));
+
+        userController.create(user1);
+        userController.create(user2);
+
+        userController.putFriend(user1.getId(), user2.getId());
+
+        assertTrue(userController.getFriends(user1.getId()).contains(user2));
+
+        userController.deleteFriend(user1.getId(), user2.getId());
+
+        assertFalse(userController.getFriends(user1.getId()).contains(user2));
+    }
+
+    @Test
+    void getFriendsList() {
+        User user1 = new User();
+        user1.setEmail("friend1@example.com");
+        user1.setLogin("friend1");
+        user1.setName("Friend 1");
+        user1.setBirthday(LocalDate.of(1990, 1, 1));
+
+        User user2 = new User();
+        user2.setEmail("friend2@example.com");
+        user2.setLogin("friend2");
+        user2.setName("Friend 2");
+        user2.setBirthday(LocalDate.of(1991, 1, 1));
+
+        userController.create(user1);
+        userController.create(user2);
+
+        userController.putFriend(user1.getId(), user2.getId());
+
+        Collection<User> friends = userController.getFriends(user1.getId());
+
+        assertTrue(friends.contains(user2));
+    }
+
+    @Test
+    void getCommonFriends() {
+        User user1 = new User();
+        user1.setEmail("friend1@example.com");
+        user1.setLogin("friend1");
+        user1.setName("Friend 1");
+        user1.setBirthday(LocalDate.of(1990, 1, 1));
+
+        User user2 = new User();
+        user2.setEmail("friend2@example.com");
+        user2.setLogin("friend2");
+        user2.setName("Friend 2");
+        user2.setBirthday(LocalDate.of(1991, 1, 1));
+
+        User user3 = new User();
+        user3.setEmail("friend3@example.com");
+        user3.setLogin("friend3");
+        user3.setName("Friend 3");
+        user3.setBirthday(LocalDate.of(1992, 1, 1));
+
+        userController.create(user1);
+        userController.create(user2);
+        userController.create(user3);
+
+        userController.putFriend(user1.getId(), user2.getId());
+        userController.putFriend(user1.getId(), user3.getId());
+        userController.putFriend(user2.getId(), user3.getId());
+
+        Collection<User> commonFriends = userController.getCommonFriends(user1.getId(), user2.getId());
+
+        assertTrue(commonFriends.contains(user3));
+    }
+
+    @Test
+    void throwConditionsNotMetExceptionWhenUserNotFoundForDeleteFriend() {
+        User user1 = new User();
+        user1.setEmail("friend1@example.com");
+        user1.setLogin("friend1");
+        user1.setName("Friend 1");
+        user1.setBirthday(LocalDate.of(1990, 1, 1));
+
+        userController.create(user1);
+
+        User nonExistentUser = new User();
+        nonExistentUser.setId(999L);
+
+        NotFoundException exception = assertThrows(NotFoundException.class, () ->
+                userController.deleteFriend(user1.getId(), nonExistentUser.getId()));
+
+        assertEquals("Пользователь с id = 999 не найден", exception.getMessage());
     }
 }
