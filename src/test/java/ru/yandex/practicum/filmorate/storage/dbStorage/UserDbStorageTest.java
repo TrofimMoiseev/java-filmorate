@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @JdbcTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Import({UserDbStorage.class,UserRepository.class, FriendshipRepository.class})
+@Import({UserDbStorage.class, UserRepository.class, FriendshipRepository.class})
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class UserDbStorageTest {
 

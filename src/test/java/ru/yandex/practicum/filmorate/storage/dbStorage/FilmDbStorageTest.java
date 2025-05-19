@@ -24,6 +24,7 @@ public class FilmDbStorageTest {
 
     @Autowired
     private UserDbStorage userDbStorage;
+
     @Test
     @DisplayName("Создание и получение фильма по ID")
     void shouldCreateAndFindFilmById() {
