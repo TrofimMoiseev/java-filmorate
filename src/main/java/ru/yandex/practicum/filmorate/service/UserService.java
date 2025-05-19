@@ -8,13 +8,10 @@ import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.user.UserStorage;
+import ru.yandex.practicum.filmorate.storage.interfaceStorage.UserStorage;
 
 import java.time.LocalDate;
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -40,14 +37,8 @@ public class UserService {
         if (!userStorage.checkId(id)) {
             throw new NotFoundException("Пользователь с id = " + id + " не найден");
         }
-        Set<Long> friendIds = userStorage.findUserById(id).getFriends();
-
-        Collection<User> friends = friendIds.stream()
-                .map(userStorage::findUserById)
-                .collect(Collectors.toList());
-
-        log.info("Список предоставлен. Текущее количество друзей {}.", friends.size());
-        return friends;
+        log.info("Список предоставлен.");
+        return userStorage.getFriends(id);
     }
 
     public Collection<User> getCommonFriends(Long userId, Long otherId) {
@@ -58,18 +49,8 @@ public class UserService {
             throw new NotFoundException("Пользователь с id = " + otherId + " не найден");
         }
 
-        Set<Long> userFriends = userStorage.findUserById(userId).getFriends();
-        Set<Long> otherUserFriends = userStorage.findUserById(otherId).getFriends();
-
-        Set<Long> commonFriendIds = new HashSet<>(userFriends);
-        commonFriendIds.retainAll(otherUserFriends);
-
-        Collection<User> commonFriends = commonFriendIds.stream()
-                .map(userStorage::findUserById)
-                .collect(Collectors.toList());
-
-        log.info("Общие друзья пользователей с id = {} и id = {}: {}", userId, otherId, commonFriends.size());
-        return commonFriends;
+        log.info("Общие друзья пользователей с id = {} и id = {}: {}", userId, otherId);
+        return userStorage.getCommonFriends(userId, otherId);
     }
 
     public User create(User user) {
@@ -128,11 +109,7 @@ public class UserService {
             throw new NotFoundException("Пользователь с id = " + friendId + " не найден");
         }
 
-        User user = userStorage.findUserById(userId);
-        User friend = userStorage.findUserById(friendId);
-
-        user.getFriends().add(friendId);
-        friend.getFriends().add(userId);
+        userStorage.putFriend(userId, friendId);
         log.info("Пользователь с ID = {} добавил в друзья пользователя с ID = {}", userId, friendId);
     }
 
@@ -145,11 +122,7 @@ public class UserService {
             throw new NotFoundException("Пользователь с id = " + friendId + " не найден");
         }
 
-        User user = userStorage.findUserById(userId);
-        User friend = userStorage.findUserById(friendId);
-
-        user.getFriends().remove(friendId);
-        friend.getFriends().remove(userId);
+        userStorage.deleteFriend(userId, friendId);
         log.info("Пользователь с ID = {} удалил из друзей пользователя с ID = {}", userId, friendId);
     }
 
