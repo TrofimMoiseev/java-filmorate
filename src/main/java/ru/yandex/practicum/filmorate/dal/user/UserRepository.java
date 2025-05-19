@@ -30,6 +30,7 @@ public class UserRepository extends BaseRepository<User> {
     private static final String INSERT_QUERY = "INSERT INTO users(login, name, email, birthday)" +
             "VALUES (?, ?, ?, ?)";
     private static final String UPDATE_QUERY = "UPDATE users SET email = ?, login = ?, name = ?, birthday = ? WHERE id = ?";
+
     public List<User> findAllUsers() {
         return findMany(FIND_ALL_QUERY);
     }
