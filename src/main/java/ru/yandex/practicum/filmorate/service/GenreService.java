@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.storage.dbStorage.GenreDbStorage;
 import ru.yandex.practicum.filmorate.storage.interfaceStorage.GenreStorage;
 
 import java.util.Collection;
