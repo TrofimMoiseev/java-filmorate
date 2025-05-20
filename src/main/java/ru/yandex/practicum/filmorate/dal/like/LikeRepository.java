@@ -26,16 +26,14 @@ public class LikeRepository extends BaseRepository<Like> {
         super(jdbc, mapper);
     }
 
-    public boolean putLike(Long userId, Long filmId) {
+    public void putLike(Long userId, Long filmId) {
         log.debug("Запрос лайка от пользователя (Id: {}) на фильм (Id: {})", userId, filmId);
-        int rowsAffected = jdbc.update(INSERT_QUERY, userId, filmId);
-        return rowsAffected > 0;
+        jdbc.update(INSERT_QUERY, userId, filmId);
     }
 
-    public boolean deleteLike(Long userId, Long filmId) {
+    public void deleteLike(Long userId, Long filmId) {
         log.debug("Запрос удаления лайка пользователя (Id: {}) с фильма (Id: {})", userId, filmId);
-        int rowsAffected = jdbc.update(DELETE_QUERY, userId, filmId);
-        return rowsAffected > 0;
+        jdbc.update(DELETE_QUERY, userId, filmId);
     }
 
     public int getLikeCount(Long filmId) {
@@ -46,13 +44,6 @@ public class LikeRepository extends BaseRepository<Like> {
     public Collection<Film> findPopularFilms(int count) {
         log.debug("Запрос на список {} популярных фильмов", count);
         return jdbc.query(FIND_POPULAR_FILMS_QUERY, new FilmRowMapper(), count);
-    }
-
-    public boolean isThisPairExist(Long userId, Long filmId) {
-        log.debug("Запрос на проверку наличия лайка от пользователя (Id: {}) у фильма (Id: {})", userId, filmId);
-        String checkQuery = "SELECT COUNT(*) FROM likes WHERE user_id = ? AND film_id = ?";
-        int count = jdbc.queryForObject(checkQuery, Integer.class, userId, filmId);
-        return count > 0;
     }
 }
 

@@ -20,7 +20,7 @@ create TABLE IF NOT EXISTS rating_mpa (
 
 create TABLE IF NOT EXISTS genre (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(50)
+    name VARCHAR(50) NOT NULL
 );
 
 create TABLE IF NOT EXISTS films (

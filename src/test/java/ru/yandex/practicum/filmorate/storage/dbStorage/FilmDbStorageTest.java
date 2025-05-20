@@ -6,6 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import ru.yandex.practicum.filmorate.dal.film.FilmRepository;
+import ru.yandex.practicum.filmorate.dal.user.UserRepository;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.model.User;
@@ -20,10 +23,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class FilmDbStorageTest {
 
     @Autowired
-    private FilmDbStorage filmDbStorage;
+    private FilmRepository filmDbStorage;
 
     @Autowired
-    private UserDbStorage userDbStorage;
+    private UserRepository userDbStorage;
 
     @Test
     @DisplayName("Создание и получение фильма по ID")
@@ -48,7 +51,9 @@ public class FilmDbStorageTest {
 
         // Сохраняем фильм и находим его по ID
         Film savedFilm = filmDbStorage.create(newFilm);
-        Film foundFilm = filmDbStorage.findFilmById(savedFilm.getId());
+        Film foundFilm = filmDbStorage.findFilmById(savedFilm.getId()).orElseThrow(() -> {
+            throw new NotFoundException("Фильм с id = " + savedFilm.getId() + " не найден");
+        });
 
         // Проверяем, что данные фильма сохранены корректно
         assertThat(foundFilm).isNotNull();
@@ -160,34 +165,5 @@ public class FilmDbStorageTest {
         // Проверяем существование фильма по ID
         assertThat(filmDbStorage.checkId(savedFilm.getId())).isTrue();
         assertThat(filmDbStorage.checkId(99999L)).isFalse();
-    }
-
-    @Test
-    @DisplayName("Добавление лайка фильму")
-    void shouldPutLike() {
-        // Создаем пользователя через UserDbStorage
-        User newUser = new User();
-        newUser.setEmail("user6@example.com");
-        newUser.setLogin("userLogin6");
-        newUser.setName("User Name");
-        newUser.setBirthday(LocalDate.of(1990, 1, 1));
-        User savedUser = userDbStorage.create(newUser);
-
-        // Создаем новый фильм
-        Mpa mpa = new Mpa();
-        mpa.setId(1L);
-        Film newFilm = new Film();
-        newFilm.setName("Liked Film");
-        newFilm.setDescription("Liked Film Description");
-        newFilm.setReleaseDate(LocalDate.of(2015, 5, 5));
-        newFilm.setDuration(130);
-        newFilm.setMpa(mpa);
-        Film savedFilm = filmDbStorage.create(newFilm);
-
-        // Добавляем лайк
-        boolean result = filmDbStorage.putLike(savedUser.getId(), savedFilm.getId());
-
-        // Проверяем, что лайк добавлен
-        assertThat(result).isTrue();
     }
 }

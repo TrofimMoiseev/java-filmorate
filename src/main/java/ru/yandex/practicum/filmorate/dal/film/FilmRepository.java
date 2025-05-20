@@ -7,10 +7,12 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.dal.BaseRepository;
+import ru.yandex.practicum.filmorate.dal.like.LikeRepository;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.storage.interfaceStorage.FilmStorage;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -20,15 +22,12 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Repository
-public class FilmRepository extends BaseRepository<Film> {
+public class FilmRepository extends BaseRepository<Film> implements FilmStorage {
+    private final LikeRepository likeRepository;
 
     private static final String FIND_ALL_QUERY = "SELECT * FROM films";
     private static final String FIND_BY_ID_QUERY = "SELECT id, name, description, release_date, duration, rating_id FROM films WHERE id=?";
     private static final String INSERT_QUERY = "INSERT INTO films (name, description, release_date, duration, rating_id) VALUES (?, ?, ?, ?, ?)";
-    private static final String FIND_BY_GENRE_QUERY = "SELECT f.* FROM films f " +
-            "JOIN genre g ON f.genre_id = g.id WHERE g.name = ?";
-    private static final String FIND_BY_RATING_QUERY = "SELECT f.* FROM films f " +
-            "JOIN rating_mpa r ON f.rating_id = r.id WHERE r.name = ?";
     private static final String COUNT_OF_RATINGS_QUERY = "SELECT COUNT(*) FROM rating_mpa WHERE id = ?";
     private static final String FIND_GENRES_BY_FILM_QUERY = """
             SELECT g.id, g.name FROM genre g JOIN film_genre fg
@@ -37,24 +36,28 @@ public class FilmRepository extends BaseRepository<Film> {
     private static final String FIND_MPA_RATINGS_QUERY = "SELECT id, name FROM rating_mpa WHERE id = ?";
     private static final String INSERT_TO_FILM_GENRES_TABLE_QUERY = "INSERT INTO film_genre (film_id, genre_id) VALUES (?, ?)";
     private static final String UPDATE_FILM_QUERY = "UPDATE films SET name=?, description=?, release_date=?, duration=?, rating_id=? WHERE id=?";
-    private static final String FILMS_COUNT_QUERY = "SELECT COUNT(*) FROM films WHERE id = ?";
     private static final String CHECK_FILM_ID = "SELECT COUNT(*) FROM films WHERE id = ?";
 
-    public FilmRepository(JdbcTemplate jdbc, RowMapper<Film> mapper) {
+    public FilmRepository(JdbcTemplate jdbc, RowMapper<Film> mapper, LikeRepository likeRepository) {
         super(jdbc, mapper);
+        this.likeRepository = likeRepository;
     }
 
-    public List<Film> findAllFilms() {
+
+    @Override
+    public List<Film> findAll() {
         return findMany(FIND_ALL_QUERY);
     }
 
-    public Optional<Film> getFilmById(Long id) {
+    @Override
+    public Optional<Film> findFilmById(Long id) {
             Optional<Film> thisFilm = findOne(FIND_BY_ID_QUERY, id);
             thisFilm.ifPresent(this::setGenreAndRatingToFilm);
             return thisFilm;
     }
 
-    public Film save(Film film) {
+    @Override
+    public Film create(Film film) {
         log.info("Добавление фильма {} в репозитории", film);
         long mpaId = film.getMpa().getId();
         Integer count = jdbc.queryForObject(COUNT_OF_RATINGS_QUERY, Integer.class, mpaId);
@@ -109,10 +112,11 @@ public class FilmRepository extends BaseRepository<Film> {
         return film;
     }
 
-    public Film updateFilm(Film film) {
+    @Override
+    public Film update(Film film) {
         log.debug("Обновление фильма {} в репозитории", film);
 
-        Integer count = jdbc.queryForObject(FILMS_COUNT_QUERY, Integer.class, film.getId());
+        Integer count = jdbc.queryForObject(CHECK_FILM_ID, Integer.class, film.getId());
         if (count == 0) {
             throw new NotFoundException("Фильм с id не удалось найти" + film.getId());
         }
@@ -140,6 +144,29 @@ public class FilmRepository extends BaseRepository<Film> {
         return film;
     }
 
+    @Override
+    public void putLike(Long userId, Long filmId) {
+        log.debug("Добавление лайка в хранилище");
+        likeRepository.putLike(userId, filmId);
+    }
+
+    @Override
+    public void deleteLike(Long userId, Long filmId) {
+        log.debug("Удаление лайка в хранилище");
+        likeRepository.deleteLike(userId, filmId);
+    }
+
+    @Override
+    public Collection<Film> findPopular(int count) {
+        log.debug("Запрос популярных фильмов в хранилище");
+        return likeRepository.findPopularFilms(count);
+    }
+
+    @Override
+    public boolean checkId(Long id) {
+        return checkId(CHECK_FILM_ID, id);
+    }
+
     private void setGenreAndRatingToFilm(Film film) {
         Mpa mpa = jdbc.queryForObject(FIND_MPA_RATINGS_QUERY, (rs, rowNum) -> {
             Mpa mpaObj = new Mpa();
@@ -157,9 +184,4 @@ public class FilmRepository extends BaseRepository<Film> {
         }, film.getId());
         film.setGenres(new LinkedHashSet<>(genres));
     }
-
-    public boolean checkId(Long id) {
-        return checkId(CHECK_FILM_ID, id);
-    }
-
 }

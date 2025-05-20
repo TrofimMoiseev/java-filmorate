@@ -25,11 +25,11 @@ public class FilmService { //логика обработки запросов
 
     public Film findFilmById(Long id) {
         log.info("Обработка GET-запроса на получение фильма по айди.");
-        if (!filmStorage.checkId(id)) {
-            log.warn("Фильм с id = {}, не найден", id);
-            throw new NotFoundException("Фильм с id = " + id + " не найден");
-        }
-        return filmStorage.findFilmById(id);
+        return filmStorage.findFilmById(id)
+                .orElseThrow(() -> {
+                    log.warn("Фильм с id = {} не найден", id);
+                    return new NotFoundException("Фильм с id = " + id + " не найден");
+                });
     }
 
     public Collection<Film> findAll() {
@@ -54,11 +54,12 @@ public class FilmService { //логика обработки запросов
             log.warn("Обновление отклонено — ID не указан");
             throw new ConditionsNotMetException("Id не указан");
         }
-        if (!filmStorage.checkId(newFilm.getId())) {
-            log.warn("Фильм с id = {}, не найден", newFilm.getId());
-            throw new NotFoundException("Фильм с id = " + newFilm.getId() + " не найден");
-        }
-        Film film = filmStorage.findFilmById(newFilm.getId());
+
+        Film film = filmStorage.findFilmById(newFilm.getId())
+                .orElseThrow(() -> {
+                    log.warn("Фильм с id = {} не найден", newFilm.getId());
+                    return new NotFoundException("Фильм с id = " + newFilm.getId() + " не найден");
+                });
 
         if (newFilm.getName() != null && !newFilm.getName().isBlank()) {
             film.setName(newFilm.getName());

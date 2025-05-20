@@ -3,10 +3,11 @@ package ru.yandex.practicum.filmorate.storage.interfaceStorage;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.Collection;
+import java.util.Optional;
 
 public interface FilmStorage {
 
-    Film findFilmById(Long id);
+    Optional<Film> findFilmById(Long id);
 
     Collection<Film> findAll();
 
@@ -18,9 +19,7 @@ public interface FilmStorage {
 
     boolean checkId(Long id);
 
-    boolean putLike(Long userId, Long filmId);
+    void putLike(Long userId, Long filmId);
 
-    boolean deleteLike(Long userId, Long filmId);
-
-    int countLikes(Long filmId);
+    void deleteLike(Long userId, Long filmId);
 }

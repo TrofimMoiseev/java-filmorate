@@ -14,6 +14,7 @@ import ru.yandex.practicum.filmorate.dal.friendship.FriendshipRepository;
 import ru.yandex.practicum.filmorate.dal.friendship.FriendshipRowMapper;
 import ru.yandex.practicum.filmorate.dal.user.UserRepository;
 import ru.yandex.practicum.filmorate.dal.user.UserRowMapper;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Friendship;
 import ru.yandex.practicum.filmorate.model.User;
 
@@ -24,11 +25,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @JdbcTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Import({UserDbStorage.class, UserRepository.class, FriendshipRepository.class})
+@Import({UserRepository.class, FriendshipRepository.class})
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class UserDbStorageTest {
 
-    private final UserDbStorage userStorage;
+    private final UserRepository userStorage;
 
     @TestConfiguration
     public static class TestConfig {
@@ -55,7 +56,9 @@ public class UserDbStorageTest {
 
         // Сохраняем пользователя и находим по ID
         User savedUser = userStorage.create(newUser);
-        User foundUser = userStorage.findUserById(savedUser.getId());
+        User foundUser = userStorage.findUserById(savedUser.getId()).orElseThrow(() -> {
+            throw  new NotFoundException("Фильм с id = " + savedUser.getId() + " не найден");
+        });
 
         // Проверяем, что данные корректно сохранены
         assertThat(foundUser).isNotNull();

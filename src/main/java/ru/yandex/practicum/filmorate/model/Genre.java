@@ -6,6 +6,6 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(of = {"id"})
 public class Genre {
-    Long id;
-    String name;
+    private Long id;
+    private String name;
 }

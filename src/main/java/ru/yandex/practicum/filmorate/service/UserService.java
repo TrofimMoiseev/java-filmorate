@@ -22,10 +22,12 @@ public class UserService {
 
     public User findUserById(Long id) {
         log.info("Обработка GET-запроса на получение пользователя по id.");
-        if (!userStorage.checkId(id)) {
-            throw new NotFoundException("Пользователь с id = " + id + " не найден");
-        }
-        return userStorage.findUserById(id);
+
+        return userStorage.findUserById(id)
+                .orElseThrow(() -> {
+                        log.warn("Фильм с id = {} не найден", id);
+        return new NotFoundException("Фильм с id = " + id + " не найден");
+                });
     }
 
     public Collection<User> findAll() {
@@ -73,10 +75,11 @@ public class UserService {
             throw new ConditionsNotMetException("Id не указан");
         }
 
-        if (!userStorage.checkId(newUser.getId())) {
-            throw new NotFoundException("Пользователь с id = " + newUser.getId() + " не найден");
-        }
-        User user = userStorage.findUserById(newUser.getId());
+        User user = userStorage.findUserById(newUser.getId())
+                .orElseThrow(() -> {
+                    log.warn("Фильм с id = {} не найден", newUser.getId());
+                    return new NotFoundException("Фильм с id = " + newUser.getId() + " не найден");
+                });
 
         if (newUser.getEmail() != null && !newUser.getEmail().isBlank() && !newUser.getEmail().equals(user.getEmail())) {
             if (userStorage.findAll().stream().anyMatch(anyUser -> anyUser.getEmail().equals(newUser.getEmail()))) {
