@@ -36,4 +36,13 @@ public class ErrorHandler {
                 e.getMessage()
         );
     }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorResponse handleInternalServerException(final InternalServerException e) {
+        return new ErrorResponse(
+                "Внутренняя ошибка сервера.",
+                e.getMessage()
+        );
+    }
 }

@@ -33,7 +33,7 @@ public class FilmController { //работа с запросами
     }
 
     @GetMapping("/popular")
-    public Collection<Film> findPopular(@RequestParam(required = false, defaultValue = "10") Long count) {
+    public Collection<Film> findPopular(@RequestParam(required = false, defaultValue = "10") int count) {
         log.info("Получен GET-запрос на получение популярных фильмов.");
         return filmService.findPopular(count);
     }
