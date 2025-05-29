@@ -21,9 +21,15 @@ public class LikeRepository extends BaseRepository<Like> {
             SELECT f.id, f.name, f.description, f.release_date, f.duration, f.rating_id, COUNT(fl.user_id) AS likes
             FROM films f LEFT JOIN likes fl ON f.id = fl.film_id GROUP BY f.id ORDER BY likes DESC, f.id ASC LIMIT ?""";
 
-    private static final String FIND_USER_LIKED_FILMS_QUERY = """
+    private static final String FIND_USERS_COMMON_FILMS_QUERY = """
             SELECT f.id, f.name, f.description, f.release_date, f.duration, f.rating_id
-            FROM films f LEFT JOIN likes fl ON f.id = fl.film_id WHERE fl.user_id = ?""";
+            FROM ((SELECT l.FILM_ID
+            	   FROM likes l
+            	   WHERE l.USER_ID = ?) ul1
+            	   JOIN (SELECT l.FILM_ID
+            	         FROM likes l
+            			 WHERE l.USER_ID = ?) ul2 ON ul1.FILM_ID  = ul2.FILM_ID) lf
+            LEFT JOIN films f ON f.ID = lf.FILM_ID""";
 
     public LikeRepository(JdbcTemplate jdbc, RowMapper<Like> mapper) {
         super(jdbc, mapper);
@@ -44,9 +50,9 @@ public class LikeRepository extends BaseRepository<Like> {
         return jdbc.query(FIND_POPULAR_FILMS_QUERY, new FilmRowMapper(), count);
     }
 
-    public Collection<Film> findUserLikedFilms(Long id) {
-        log.debug("Запрос на список {} фильмов, которые понравились пользователю", id);
-        return jdbc.query(FIND_USER_LIKED_FILMS_QUERY, new FilmRowMapper(), id);
+    public Collection<Film> findUsersCommonFilms(Long userId, Long friendId) {
+        log.debug("Запрос на список фильмов, которые понравились пользователям {} и {}", userId, friendId);
+        return jdbc.query(FIND_USERS_COMMON_FILMS_QUERY, new FilmRowMapper(), userId, friendId);
     }
 }
 
