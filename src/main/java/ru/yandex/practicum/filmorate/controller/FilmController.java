@@ -70,4 +70,13 @@ public class FilmController { //работа с запросами
         log.info("Получен Delete-запрос на удаление лайка");
         filmService.deleteLike(filmId, userId);
     }
+
+    @GetMapping("/common")
+    public Collection<Film> findCommonFilms(
+            @RequestParam Long userId,
+            @RequestParam Long friendId
+            ) {
+        log.info("Получен GET-запрос на получение общих фильмов по айди двух пользователей.");
+        return filmService.findCommonFilms(userId, friendId);
+    }
 }

@@ -112,6 +112,11 @@ public class FilmService { //логика обработки запросов
         filmStorage.deleteLike(userId, filmId);
     }
 
+    public Collection<Film> findCommonFilms(Long userId, Long friendId) {
+        log.info("Обработка GET-запроса на получение общих фильмов по айди двух пользователей.");
+        return filmStorage.findCommonFilms(userId, friendId);
+    }
+
     private void check(Film film) {
         if (film.getName() == null || film.getName().isBlank()) {
             log.warn("Валидация не пройдена — имя фильма отсутствует");

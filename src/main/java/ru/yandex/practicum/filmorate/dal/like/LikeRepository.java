@@ -21,6 +21,10 @@ public class LikeRepository extends BaseRepository<Like> {
             SELECT f.id, f.name, f.description, f.release_date, f.duration, f.rating_id, COUNT(fl.user_id) AS likes
             FROM films f LEFT JOIN likes fl ON f.id = fl.film_id GROUP BY f.id ORDER BY likes DESC, f.id ASC LIMIT ?""";
 
+    private static final String FIND_USER_LIKED_FILMS_QUERY = """
+            SELECT f.id, f.name, f.description, f.release_date, f.duration, f.rating_id
+            FROM films f LEFT JOIN likes fl ON f.id = fl.film_id WHERE fl.user_id = ?""";
+
     public LikeRepository(JdbcTemplate jdbc, RowMapper<Like> mapper) {
         super(jdbc, mapper);
     }
@@ -38,6 +42,11 @@ public class LikeRepository extends BaseRepository<Like> {
     public Collection<Film> findPopularFilms(int count) {
         log.debug("Запрос на список {} популярных фильмов", count);
         return jdbc.query(FIND_POPULAR_FILMS_QUERY, new FilmRowMapper(), count);
+    }
+
+    public Collection<Film> findUserLikedFilms(Long id) {
+        log.debug("Запрос на список {} фильмов, которые понравились пользователю", id);
+        return jdbc.query(FIND_USER_LIKED_FILMS_QUERY, new FilmRowMapper(), id);
     }
 }
 
