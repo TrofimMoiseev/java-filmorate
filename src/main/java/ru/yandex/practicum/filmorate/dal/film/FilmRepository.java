@@ -220,7 +220,7 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     }
 
     @Override
-    public Collection<Film> findFilmsByDirectorId(Long id, String sortBy){
+    public Collection<Film> findFilmsByDirectorId(Long id, String sortBy) {
         log.debug("Запрос фильмов и сортировка фильмов по айди режиссера");
         if (!sortBy.equals("year") && !sortBy.equals("likes")) {
             throw new ValidationException("Параметр sortBy может быть только 'year' или 'likes'");
