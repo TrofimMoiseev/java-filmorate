@@ -70,4 +70,12 @@ public class FilmController { //работа с запросами
         log.info("Получен Delete-запрос на удаление лайка");
         filmService.deleteLike(filmId, userId);
     }
+
+    @GetMapping("/director/{directorId}")
+    public Collection<Film> findFilmsByDirectorId(
+            @PathVariable Long directorId,
+            @RequestParam String sortBy
+    ) {
+        return filmService.findFilmsByDirectorId(directorId, sortBy);
+    }
 }

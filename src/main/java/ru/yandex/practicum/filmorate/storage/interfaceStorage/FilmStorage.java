@@ -13,6 +13,8 @@ public interface FilmStorage {
 
     Collection<Film> findPopular(int count);
 
+    Collection<Film> findFilmsByDirectorId(Long id, String sortBy);
+
     Film create(Film film);
 
     Film update(Film film);

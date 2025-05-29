@@ -4,6 +4,8 @@ DROP TABLE IF EXISTS genre CASCADE;
 DROP TABLE IF EXISTS films CASCADE;
 DROP TABLE IF EXISTS likes CASCADE;
 DROP TABLE IF EXISTS friendship CASCADE;
+DROP TABLE IF EXISTS director CASCADE;
+DROP TABLE IF EXISTS film_director CASCADE;
 
 create TABLE IF NOT EXISTS users (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -23,6 +25,11 @@ create TABLE IF NOT EXISTS genre (
     name VARCHAR(50) NOT NULL
 );
 
+create TABLE IF NOT EXISTS director (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255) NOT NULL
+);
+
 create TABLE IF NOT EXISTS films (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(100) NOT NULL,
@@ -31,6 +38,13 @@ create TABLE IF NOT EXISTS films (
     duration INT NOT NULL,
     rating_id BIGINT,
     FOREIGN KEY (rating_id) REFERENCES rating_mpa(id)
+);
+
+CREATE TABLE IF NOT EXISTS film_director (
+    film_id BIGINT NOT NULL,
+    director_id BIGINT NOT NULL,
+    FOREIGN KEY (film_id) REFERENCES films(id),
+    FOREIGN KEY (director_id) REFERENCES director(id)
 );
 
 CREATE TABLE IF NOT EXISTS film_genre (
@@ -47,7 +61,6 @@ create TABLE IF NOT EXISTS likes (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (film_id) REFERENCES films(id) ON DELETE CASCADE
 );
-
 
 create TABLE IF NOT EXISTS friendship (
     user_id BIGINT,
