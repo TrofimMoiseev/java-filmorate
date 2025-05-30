@@ -26,4 +26,6 @@ public interface FilmStorage {
     void deleteLike(Long userId, Long filmId);
 
     Collection<Film> findCommonFilms(Long userId, Long friendId);
+
+    Collection<Film> findFilmsDirectorsByQuery(String query, String by);
 }

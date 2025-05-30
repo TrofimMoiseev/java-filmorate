@@ -133,6 +133,11 @@ public class FilmService { //логика обработки запросов
         return filmStorage.findCommonFilms(userId, friendId);
     }
 
+    public Collection<Film> findFilmsDirectorsByQuery(String query, String by) {
+        log.info("Обработка GET-запроса на поиск фильмов, режиссеров по ключевому слову.");
+        return filmStorage.findFilmsDirectorsByQuery(query, by);
+    }
+
     private void check(Film film) {
         if (film.getName() == null || film.getName().isBlank()) {
             log.warn("Валидация не пройдена — имя фильма отсутствует");

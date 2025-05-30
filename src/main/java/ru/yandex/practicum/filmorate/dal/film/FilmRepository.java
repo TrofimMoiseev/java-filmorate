@@ -53,6 +53,13 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
             WHERE fl.director_id=?
             GROUP BY f.id
             """;
+    private static final String FIND_FILMS_DIRECTORS_BY_QUERY = """
+            SELECT f.id, f.name, f.description, f.release_date, f.duration, f.rating_id
+            FROM films f
+            LEFT JOIN film_director fd ON f.id = fd.film_id
+            LEFT JOIN director d ON fd.director_id = d.id
+            LEFT JOIN likes l ON f.id = l.film_id
+            """;
 
     public FilmRepository(JdbcTemplate jdbc, RowMapper<Film> mapper, LikeRepository likeRepository) {
         super(jdbc, mapper);
@@ -234,6 +241,38 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
         }
 
         Collection<Film> films = findMany(sql, id);
+        for (Film film : films) {
+            setGenreAndRatingToFilm(film);
+            setDirectorsToFilm(film);
+        }
+
+        return films;
+    }
+
+    @Override
+    public Collection<Film> findFilmsDirectorsByQuery(String query, String by) {
+        log.debug("Запрос фильмов и сортировка фильмов по айди режиссера");
+
+        String sql = FIND_FILMS_DIRECTORS_BY_QUERY;
+        ArrayList<String> params = new ArrayList<>();
+        if (by.equals("director,title") || by.equals("title,director")) {
+            sql += "WHERE LOWER(f.name) LIKE LOWER(CONCAT('%', ?, '%'))\n" +
+                    "OR LOWER(d.name) LIKE LOWER(CONCAT('%', ?, '%'))";
+            params.add(query);
+            params.add(query);
+        } else if (by.equals("director")) {
+            sql += "WHERE LOWER(d.name) LIKE LOWER(CONCAT('%', ?, '%'))";
+            params.add(query);
+        } else if (by.equals("title")) {
+            sql += "WHERE LOWER(f.name) LIKE LOWER(CONCAT('%', ?, '%'))";
+            params.add(query);
+        } else {
+            throw new ValidationException("Параметр by может быть только 'director', 'title', 'title,director', 'director,title'");
+        }
+
+        sql += " GROUP BY f.id ORDER BY COUNT(distinct l.user_id) DESC";
+
+        Collection<Film> films = findMany(sql, params.toArray());
         for (Film film : films) {
             setGenreAndRatingToFilm(film);
             setDirectorsToFilm(film);
