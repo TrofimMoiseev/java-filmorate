@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.dal.review;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -81,7 +82,7 @@ public class ReviewRepository extends BaseRepository<Review> implements ReviewSt
             ps.setBoolean(2, review.getIsPositive());
             ps.setLong(3, review.getUserId());
             ps.setLong(4, review.getFilmId());
-            ps.setInt(5, 0);
+            ps.setInt(5, review.getUseful());
             return ps;
         }, keyHolder);
 
@@ -112,9 +113,14 @@ public class ReviewRepository extends BaseRepository<Review> implements ReviewSt
 
     @Override
     public Optional<Review> findById(Long id) {
-        List<Review> result = jdbc.query(FIND_BY_ID, mapper, id);
-        return result.stream().findFirst();
+        try {
+            Review review = jdbc.queryForObject(FIND_BY_ID, mapper, id);
+            return Optional.ofNullable(review);
+        } catch (EmptyResultDataAccessException e) {
+            return Optional.empty();
+        }
     }
+
 
     @Override
     public void putLike(Long reviewId, Long userId) {
@@ -139,8 +145,8 @@ public class ReviewRepository extends BaseRepository<Review> implements ReviewSt
     @Override
     public Optional<Boolean> getReviewRating(Long reviewId, Long userId) {
         String sql = "SELECT is_like FROM review_likes WHERE review_id = ? AND user_id = ?";
-        List<Boolean> result = jdbc.query(sql, (rs, rowNum) -> rs.getBoolean("is_like"), reviewId, userId);
-        return result.stream().findFirst();
+        Boolean result = jdbc.query(sql, rs -> rs.next() ? rs.getBoolean("is_like") : null, reviewId, userId);
+        return Optional.ofNullable(result);
     }
 
 

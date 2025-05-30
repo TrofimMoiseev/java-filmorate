@@ -4,6 +4,8 @@ DROP TABLE IF EXISTS genre CASCADE;
 DROP TABLE IF EXISTS films CASCADE;
 DROP TABLE IF EXISTS likes CASCADE;
 DROP TABLE IF EXISTS friendship CASCADE;
+DROP TABLE IF EXISTS reviews CASCADE;
+DROP TABLE IF EXISTS review_likes CASCADE;
 
 create TABLE IF NOT EXISTS users (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -58,7 +60,7 @@ create TABLE IF NOT EXISTS friendship (
 );
 
 create TABLE IF NOT EXISTS reviews (
-    reviewId BIGINT PRIMARY KEY AUTO_INCREMENT,
+    review_id BIGINT PRIMARY KEY AUTO_INCREMENT,
     content TEXT NOT NULL,
     is_positive BOOLEAN NOT NULL,
     user_id BIGINT NOT NULL,
@@ -73,6 +75,6 @@ create TABLE IF NOT EXISTS review_likes (
     user_id BIGINT NOT NULL,
     is_like BOOLEAN NOT NULL,
     PRIMARY KEY (review_id, user_id),
-    FOREIGN KEY (review_id) REFERENCES reviews(reviewId) ON DELETE CASCADE,
+    FOREIGN KEY (review_id) REFERENCES reviews(review_id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
