@@ -115,12 +115,11 @@ public class ReviewRepository extends BaseRepository<Review> implements ReviewSt
     public Optional<Review> findById(Long id) {
         try {
             Review review = jdbc.queryForObject(FIND_BY_ID, mapper, id);
-            return Optional.ofNullable(review);
+            return Optional.of(review);
         } catch (EmptyResultDataAccessException e) {
             return Optional.empty();
         }
     }
-
 
     @Override
     public void putLike(Long reviewId, Long userId) {
@@ -145,8 +144,8 @@ public class ReviewRepository extends BaseRepository<Review> implements ReviewSt
     @Override
     public Optional<Boolean> getReviewRating(Long reviewId, Long userId) {
         String sql = "SELECT is_like FROM review_likes WHERE review_id = ? AND user_id = ?";
-        Boolean result = jdbc.query(sql, rs -> rs.next() ? rs.getBoolean("is_like") : null, reviewId, userId);
-        return Optional.ofNullable(result);
+        List<Boolean> result = jdbc.query(sql, (rs, rowNum) -> rs.getBoolean("is_like"), reviewId, userId);
+        return result.stream().findFirst();
     }
 
 
