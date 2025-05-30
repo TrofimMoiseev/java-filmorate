@@ -24,6 +24,7 @@ public class ReviewService {
 
     public Review create(Review review) {
         validateReview(review);
+        review.setUseful(0);
         return reviewStorage.create(review);
     }
 
