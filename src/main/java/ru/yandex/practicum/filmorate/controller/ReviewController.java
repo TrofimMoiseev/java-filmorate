@@ -38,34 +38,34 @@ public class ReviewController {
         return reviewService.getById(id);
     }
 
-    @GetMapping("/reviews?filmId={filmId}&count={count}")
+    @GetMapping
     public List<Review> getByFilmReviews(@RequestParam(defaultValue = "0") Long filmId,
                                          @RequestParam(defaultValue = "10") Integer count) {
-        log.info("GET запрос на получение отзывов фильма с id: {}", filmId);
+        log.info("GET отзывы по фильму filmId={}, count={}", filmId, count);
         return reviewService.getAll(filmId, count);
     }
 
     @PutMapping("/{id}/like/{userId}")
-    public void addLike(@PathVariable Long id, @PathVariable Long userId) {
-        log.info("PUT запрос на добавление лайка от пользователя с id {} в отзыв с id: {}", id, userId);
+    public Review addLike(@PathVariable Long id, @PathVariable Long userId) {
         reviewService.putLike(id, userId);
+        return reviewService.getById(id);
     }
 
     @PutMapping("/{id}/dislike/{userId}")
-    public void addDislike(@PathVariable Long id, @PathVariable Long userId) {
-        log.info("PUT запрос на добавление дизлайка от пользователя с id {} в отзыв с id: {}", id, userId);
+    public Review addDislike(@PathVariable Long id, @PathVariable Long userId) {
         reviewService.putDislike(id, userId);
+        return reviewService.getById(id);
     }
 
     @DeleteMapping("/{id}/like/{userId}")
-    public void deleteLike(@PathVariable Long id, @PathVariable Long userId) {
-        log.info("DELETE запрос на удаление лайка от пользователя с id {} в отзыв с id: {}", id, userId);
+    public Review deleteLike(@PathVariable Long id, @PathVariable Long userId) {
         reviewService.deleteLike(id, userId);
+        return reviewService.getById(id);
     }
 
     @DeleteMapping("/{id}/dislike/{userId}")
-    public void deleteDislike(@PathVariable Long id, @PathVariable Long userId) {
-        log.info("DELETE запрос на удаление дизлайка от пользователя с id {} в отзыв с id: {}", id, userId);
+    public Review deleteDislike(@PathVariable Long id, @PathVariable Long userId) {
         reviewService.deleteDislike(id, userId);
+        return reviewService.getById(id);
     }
 }
