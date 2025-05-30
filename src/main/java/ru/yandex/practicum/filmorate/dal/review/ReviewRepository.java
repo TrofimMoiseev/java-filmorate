@@ -112,26 +112,26 @@ public class ReviewRepository extends BaseRepository<Review> implements ReviewSt
     }
 
     @Override
-    public void putLike(Long Id, Long userId) {
-        jdbc.update(INSERT_REVIEW_RATING, Id, userId, true);
-        jdbc.update(UPDATE_USEFUL_PLUS, Id);
+    public void putLike(Long reviewId, Long userId) {
+        jdbc.update(INSERT_REVIEW_RATING, reviewId, userId, true);
+        jdbc.update(UPDATE_USEFUL_PLUS, reviewId);
     }
 
     @Override
-    public void putDisLike(Long Id, Long userId) {
-        jdbc.update(INSERT_REVIEW_RATING, Id, userId, false);
-        jdbc.update(UPDATE_USEFUL_MINUS, Id);
+    public void putDisLike(Long reviewId, Long userId) {
+        jdbc.update(INSERT_REVIEW_RATING, reviewId, userId, false);
+        jdbc.update(UPDATE_USEFUL_MINUS, reviewId);
     }
 
     @Override
-    public void deleteLike(Long Id, Long userId) {
-        jdbc.update(DELETE_LIKE, Id, userId);
-        jdbc.update(UPDATE_USEFUL_MINUS, Id);
+    public void deleteLike(Long reviewId, Long userId) {
+        jdbc.update(DELETE_LIKE, reviewId, userId);
+        jdbc.update(UPDATE_USEFUL_MINUS, reviewId);
     }
 
     @Override
-    public void deleteDisLike(Long Id, Long userId) {
-        jdbc.update(DELETE_DISLIKE, Id, userId);
-        jdbc.update(UPDATE_USEFUL_PLUS, Id);
+    public void deleteDisLike(Long reviewId, Long userId) {
+        jdbc.update(DELETE_DISLIKE, reviewId, userId);
+        jdbc.update(UPDATE_USEFUL_PLUS, reviewId);
     }
 }
