@@ -273,7 +273,6 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
         sql += " GROUP BY f.id ORDER BY COUNT(distinct l.user_id) DESC";
 
         Collection<Film> films = findMany(sql, params.toArray());
-        
         for (Film film : films) {
             setGenreAndRatingToFilm(film);
             setDirectorsToFilm(film);
