@@ -16,6 +16,8 @@ public interface ReviewStorage {
 
     Optional<Review> getById(Long reviewId);
 
+    Optional<Boolean> getReviewRating(Long reviewId, Long userId);
+
     void putLike(Long reviewId, Long userId);
 
     void putDisLike(Long reviewId, Long userId);

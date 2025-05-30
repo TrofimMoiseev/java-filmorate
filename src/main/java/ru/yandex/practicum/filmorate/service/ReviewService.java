@@ -53,11 +53,23 @@ public class ReviewService {
 
     public void putLike(Long reviewId, Long userId) {
         validateLikeInput(reviewId, userId);
+
+        Optional<Boolean> currentRating = reviewStorage.getReviewRating(reviewId, userId);
+        if (currentRating.isPresent() && currentRating.get()) {
+            throw new ValidationException("Пользователь уже поставил лайк");
+        }
+
         reviewStorage.putLike(reviewId, userId);
     }
 
     public void putDislike(Long reviewId, Long userId) {
         validateLikeInput(reviewId, userId);
+
+        Optional<Boolean> currentRating = reviewStorage.getReviewRating(reviewId, userId);
+        if (currentRating.isPresent() && !currentRating.get()) {
+            throw new ValidationException("Пользователь уже поставил дизлайк");
+        }
+
         reviewStorage.putDisLike(reviewId, userId);
     }
 

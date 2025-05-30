@@ -137,6 +137,14 @@ public class ReviewRepository extends BaseRepository<Review> implements ReviewSt
     }
 
     @Override
+    public Optional<Boolean> getReviewRating(Long reviewId, Long userId) {
+        String sql = "SELECT is_like FROM review_likes WHERE review_id = ? AND user_id = ?";
+        List<Boolean> result = jdbc.query(sql, (rs, rowNum) -> rs.getBoolean("is_like"), reviewId, userId);
+        return result.stream().findFirst();
+    }
+
+
+    @Override
     public void deleteLike(Long reviewId, Long userId) {
         jdbc.update(DELETE_LIKE, reviewId, userId);
         jdbc.update(UPDATE_USEFUL_MINUS, reviewId);
