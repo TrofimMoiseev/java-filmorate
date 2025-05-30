@@ -54,6 +54,11 @@ public class ReviewRepository extends BaseRepository<Review> implements ReviewSt
         WHERE review_id = ? AND user_id = ? AND is_like = FALSE
     """;
 
+    private static final String CHECK_ALREADY_RATED = """
+        SELECT COUNT(*) FROM review_likes
+        WHERE review_id = ? AND user_id = ? AND is_like = ?
+    """;
+
     private static final String UPDATE_USEFUL_PLUS = """
         UPDATE reviews SET useful = useful + 1 WHERE reviewId = ?
     """;
@@ -113,14 +118,22 @@ public class ReviewRepository extends BaseRepository<Review> implements ReviewSt
 
     @Override
     public void putLike(Long reviewId, Long userId) {
-        jdbc.update(INSERT_REVIEW_RATING, reviewId, userId, true);
-        jdbc.update(UPDATE_USEFUL_PLUS, reviewId);
+        jdbc.update(DELETE_DISLIKE, reviewId, userId);
+
+        if (!hasAlreadyRated(reviewId, userId, true)) {
+            jdbc.update(INSERT_REVIEW_RATING, reviewId, userId, true);
+            jdbc.update(UPDATE_USEFUL_PLUS, reviewId);
+        }
     }
 
     @Override
     public void putDisLike(Long reviewId, Long userId) {
-        jdbc.update(INSERT_REVIEW_RATING, reviewId, userId, false);
-        jdbc.update(UPDATE_USEFUL_MINUS, reviewId);
+        jdbc.update(DELETE_LIKE, reviewId, userId);
+
+        if (!hasAlreadyRated(reviewId, userId, false)) {
+            jdbc.update(INSERT_REVIEW_RATING, reviewId, userId, false);
+            jdbc.update(UPDATE_USEFUL_MINUS, reviewId);
+        }
     }
 
     @Override
@@ -133,5 +146,10 @@ public class ReviewRepository extends BaseRepository<Review> implements ReviewSt
     public void deleteDisLike(Long reviewId, Long userId) {
         jdbc.update(DELETE_DISLIKE, reviewId, userId);
         jdbc.update(UPDATE_USEFUL_PLUS, reviewId);
+    }
+
+    private boolean hasAlreadyRated(Long reviewId, Long userId, boolean isLike) {
+        Integer count = jdbc.queryForObject(CHECK_ALREADY_RATED, Integer.class, reviewId, userId, isLike);
+        return count != null && count > 0;
     }
 }

@@ -44,7 +44,7 @@ public class ReviewService {
 
     public Review getById(Long id) {
         return reviewStorage.getById(id)
-                .orElseThrow(() -> new ValidationException("Отзыв с id=" + id + " не найден"));
+                .orElseThrow(() -> new NotFoundException("Отзыв с id=" + id + " не найден"));
     }
 
     public List<Review> getAll(Long filmId, Integer count) {
@@ -75,21 +75,28 @@ public class ReviewService {
         Long userId = review.getUserId();
         Long filmId = review.getFilmId();
 
+        if (userId == null) {
+            throw new ValidationException("Пользователь не указан (userId=null)");
+        }
+        if (filmId == null) {
+            throw new ValidationException("Фильм не указан (filmId=null)");
+        }
+
         if (!userStorage.checkId(userId)) {
             throw new NotFoundException("Пользователь с id=" + userId + " не существует");
         }
+
         if (!filmStorage.checkId(filmId)) {
             throw new NotFoundException("Фильм с id=" + filmId + " не существует");
         }
-
     }
 
     private void validateLikeInput(Long reviewId, Long userId) {
         if (reviewStorage.getById(reviewId).isEmpty()) {
-            throw new NotFoundException("Отзыв с id=" + reviewId + " не найден");
+            throw new ValidationException("Отзыв с id=" + reviewId + " не найден");
         }
         if (!userStorage.checkId(userId)) {
-            throw new NotFoundException("Пользователь с id=" + userId + " не найден");
+            throw new ValidationException("Пользователь с id=" + userId + " не найден");
         }
     }
 }
