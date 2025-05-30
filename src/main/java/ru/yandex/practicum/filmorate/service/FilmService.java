@@ -42,6 +42,11 @@ public class FilmService { //логика обработки запросов
         return filmStorage.findPopular(count);
     }
 
+    public Collection<Film> findFilmsByDirectorId(Long id, String sortBy) {
+        log.info("Обработка GET-запроса на получение фильмов по айди режиссера.");
+        return filmStorage.findFilmsByDirectorId(id, sortBy);
+    }
+
     public Film create(Film film) {
         log.info("Обработка POST-запроса на добавление фильма: {}", film);
         check(film);
@@ -78,6 +83,18 @@ public class FilmService { //логика обработки запросов
         if (newFilm.getDuration() != null && newFilm.getDuration() > 0) {
             film.setDuration(newFilm.getDuration());
         }
+
+        if (newFilm.getMpa() != null) {
+            film.setMpa(newFilm.getMpa());
+        }
+
+        if (newFilm.getGenres() != null) {
+            film.setGenres(newFilm.getGenres());
+        }
+
+        if (newFilm.getDirectors() != null) {
+            film.setDirectors(newFilm.getDirectors());
+        }
         return filmStorage.update(film);
     }
 
@@ -106,7 +123,6 @@ public class FilmService { //логика обработки запросов
             log.warn("Пользователь с id = {}, не найден", userId);
             throw new NotFoundException("Пользователь с id = " + userId + " не найден");
         }
-
 
         log.info("Лайк фильму с id {}, удален.", filmId);
         filmStorage.deleteLike(userId, filmId);
