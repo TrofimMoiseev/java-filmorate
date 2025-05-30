@@ -14,13 +14,13 @@ public interface ReviewStorage {
 
     List<Review> getAll(Long filmId, int count);
 
-    Optional<Review> getById(Long review_id);
+    Optional<Review> getById(Long reviewId);
 
-    void putLike(Long Id, Long userId);
+    void putLike(Long reviewId, Long userId);
 
-    void putDisLike(Long Id, Long userId);
+    void putDisLike(Long reviewId, Long userId);
 
-    void deleteLike(Long Id, Long userId);
+    void deleteLike(Long reviewId, Long userId);
 
-    void deleteDisLike(Long Id, Long userId);
+    void deleteDisLike(Long reviewId, Long userId);
 }
