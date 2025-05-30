@@ -79,7 +79,7 @@ public class FilmController { //работа с запросами
         log.info("Получен GET-запрос на получение общих фильмов по айди двух пользователей.");
         return filmService.findCommonFilms(userId, friendId);
     }
-  
+    
     @GetMapping("/director/{directorId}")
     public Collection<Film> findFilmsByDirectorId(
             @PathVariable Long directorId,
