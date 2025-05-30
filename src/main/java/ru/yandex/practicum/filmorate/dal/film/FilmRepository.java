@@ -247,6 +247,14 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
         return checkId(CHECK_FILM_ID, id);
     }
 
+    @Override
+    public Collection<Film> findCommonFilms(Long userId, Long friendId) {
+        Collection<Film> commonFilms = likeRepository.findUsersCommonFilms(userId, friendId);
+        commonFilms.forEach(this::setGenreAndRatingToFilm);
+
+        return commonFilms;
+    }
+
     private void setGenreAndRatingToFilm(Film film) {
         Mpa mpa = jdbc.queryForObject(FIND_MPA_RATINGS_QUERY, (rs, rowNum) -> {
             Mpa mpaObj = new Mpa();
