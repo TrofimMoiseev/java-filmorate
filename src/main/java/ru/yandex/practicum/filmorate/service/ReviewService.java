@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.storage.interfaceStorage.FilmStorage;
@@ -75,20 +76,20 @@ public class ReviewService {
         Long filmId = review.getFilmId();
 
         if (!userStorage.checkId(userId)) {
-            throw new ValidationException("Пользователь с id=" + userId + " не существует");
+            throw new NotFoundException("Пользователь с id=" + userId + " не существует");
         }
         if (!filmStorage.checkId(filmId)) {
-            throw new ValidationException("Фильм с id=" + filmId + " не существует");
+            throw new NotFoundException("Фильм с id=" + filmId + " не существует");
         }
 
     }
 
     private void validateLikeInput(Long reviewId, Long userId) {
         if (reviewStorage.getById(reviewId).isEmpty()) {
-            throw new ValidationException("Отзыв с id=" + reviewId + " не найден");
+            throw new NotFoundException("Отзыв с id=" + reviewId + " не найден");
         }
         if (!userStorage.checkId(userId)) {
-            throw new ValidationException("Пользователь с id=" + userId + " не найден");
+            throw new NotFoundException("Пользователь с id=" + userId + " не найден");
         }
     }
 }
