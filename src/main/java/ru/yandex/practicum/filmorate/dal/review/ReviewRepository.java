@@ -81,7 +81,7 @@ public class ReviewRepository extends BaseRepository<Review> implements ReviewSt
             ps.setString(1, review.getContent());
             ps.setBoolean(2, review.getIsPositive());
             ps.setLong(3, review.getUserId());
-            ps.setLong(4, review.getFilmId());
+            ps.setLong(4, review.getReviewId());
             ps.setInt(5, review.getUseful());
             return ps;
         }, keyHolder);
