@@ -70,4 +70,31 @@ public class FilmController { //работа с запросами
         log.info("Получен Delete-запрос на удаление лайка");
         filmService.deleteLike(filmId, userId);
     }
+
+    @GetMapping("/common")
+    public Collection<Film> findCommonFilms(
+            @RequestParam Long userId,
+            @RequestParam Long friendId
+    ) {
+        log.info("Получен GET-запрос на получение общих фильмов по айди двух пользователей.");
+        return filmService.findCommonFilms(userId, friendId);
+    }
+
+    @GetMapping("/director/{directorId}")
+    public Collection<Film> findFilmsByDirectorId(
+            @PathVariable Long directorId,
+            @RequestParam String sortBy
+    ) {
+        log.info("Получен GET-запрос на поиск фильмов по режиссеру.");
+        return filmService.findFilmsByDirectorId(directorId, sortBy);
+    }
+
+    @GetMapping("/search")
+    public Collection<Film> findFilmsDirectorsByQuery(
+            @RequestParam String query,
+            @RequestParam String by
+    ) {
+        log.info("Получен GET-запрос на поиск фильмов, режиссеров по ключевому слову.");
+        return filmService.findFilmsDirectorsByQuery(query, by);
+    }
 }

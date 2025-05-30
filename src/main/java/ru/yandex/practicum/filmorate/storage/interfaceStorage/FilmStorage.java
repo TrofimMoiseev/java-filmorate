@@ -13,6 +13,8 @@ public interface FilmStorage {
 
     Collection<Film> findPopular(int count);
 
+    Collection<Film> findFilmsByDirectorId(Long id, String sortBy);
+
     Film create(Film film);
 
     Film update(Film film);
@@ -22,4 +24,8 @@ public interface FilmStorage {
     void putLike(Long userId, Long filmId);
 
     void deleteLike(Long userId, Long filmId);
+
+    Collection<Film> findCommonFilms(Long userId, Long friendId);
+
+    Collection<Film> findFilmsDirectorsByQuery(String query, String by);
 }
