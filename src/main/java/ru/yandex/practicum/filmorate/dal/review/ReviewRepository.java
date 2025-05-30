@@ -25,12 +25,12 @@ public class ReviewRepository extends BaseRepository<Review> implements ReviewSt
     """;
 
     private static final String UPDATE_REVIEW = """
-        UPDATE reviews SET content = ?, is_positive = ? WHERE reviewId = ?
+        UPDATE reviews SET content = ?, is_positive = ? WHERE review_id = ?
     """;
 
-    private static final String DELETE_REVIEW = "DELETE FROM reviews WHERE reviewId = ?";
+    private static final String DELETE_REVIEW = "DELETE FROM reviews WHERE review_id = ?";
 
-    private static final String FIND_BY_ID = "SELECT * FROM reviews WHERE reviewId = ?";
+    private static final String FIND_BY_ID = "SELECT * FROM reviews WHERE review_id = ?";
 
     private static final String FIND_ALL = """
         SELECT * FROM reviews
@@ -61,11 +61,11 @@ public class ReviewRepository extends BaseRepository<Review> implements ReviewSt
     """;
 
     private static final String UPDATE_USEFUL_PLUS = """
-        UPDATE reviews SET useful = useful + 1 WHERE reviewId = ?
+        UPDATE reviews SET useful = useful + 1 WHERE review_id = ?
     """;
 
     private static final String UPDATE_USEFUL_MINUS = """
-        UPDATE reviews SET useful = useful - 1 WHERE reviewId = ?
+        UPDATE reviews SET useful = useful - 1 WHERE review_id = ?
     """;
 
     public ReviewRepository(JdbcTemplate jdbc, RowMapper<Review> mapper) {
