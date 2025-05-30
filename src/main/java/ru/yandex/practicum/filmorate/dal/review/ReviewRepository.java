@@ -86,7 +86,7 @@ public class ReviewRepository extends BaseRepository<Review> implements ReviewSt
         }, keyHolder);
 
         Long id = keyHolder.getKey().longValue();
-        return getById(id).orElseThrow();
+        return findById(id).orElseThrow();
     }
 
 
@@ -97,7 +97,7 @@ public class ReviewRepository extends BaseRepository<Review> implements ReviewSt
                 review.getIsPositive(),
                 review.getReviewId()
         );
-        return getById(review.getReviewId()).orElseThrow();
+        return findById(review.getReviewId()).orElseThrow();
     }
 
     @Override
@@ -106,12 +106,12 @@ public class ReviewRepository extends BaseRepository<Review> implements ReviewSt
     }
 
     @Override
-    public List<Review> getAll(Long filmId, int count) {
+    public List<Review> findAll(Long filmId, int count) {
         return jdbc.query(FIND_ALL, mapper, filmId, filmId, count);
     }
 
     @Override
-    public Optional<Review> getById(Long id) {
+    public Optional<Review> findById(Long id) {
         List<Review> result = jdbc.query(FIND_BY_ID, mapper, id);
         return result.stream().findFirst();
     }

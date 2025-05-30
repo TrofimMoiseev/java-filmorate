@@ -29,7 +29,7 @@ public class ReviewService {
     }
 
     public Review update(Review review) {
-        Optional<Review> existing = reviewStorage.getById(review.getReviewId());
+        Optional<Review> existing = reviewStorage.findById(review.getReviewId());
         if (existing.isEmpty()) {
             throw new ValidationException("Отзыв с id=" + review.getReviewId() + " не найден");
         }
@@ -37,18 +37,18 @@ public class ReviewService {
     }
 
     public void delete(Long id) {
-        Review review = reviewStorage.getById(id)
+        Review review = reviewStorage.findById(id)
                 .orElseThrow(() -> new ValidationException("Отзыв с id=" + id + " не найден"));
         reviewStorage.delete(review);
     }
 
-    public Review getById(Long id) {
-        return reviewStorage.getById(id)
+    public Review findById(Long id) {
+        return reviewStorage.findById(id)
                 .orElseThrow(() -> new NotFoundException("Отзыв с id=" + id + " не найден"));
     }
 
-    public List<Review> getAll(Long filmId, Integer count) {
-        return reviewStorage.getAll(filmId, count != null ? count : 10);
+    public List<Review> findAll(Long filmId, Integer count) {
+        return reviewStorage.findAll(filmId, count != null ? count : 10);
     }
 
     public void putLike(Long reviewId, Long userId) {
@@ -108,7 +108,7 @@ public class ReviewService {
     }
 
     private void validateLikeInput(Long reviewId, Long userId) {
-        if (reviewStorage.getById(reviewId).isEmpty()) {
+        if (reviewStorage.findById(reviewId).isEmpty()) {
             throw new ValidationException("Отзыв с id=" + reviewId + " не найден");
         }
         if (!userStorage.checkId(userId)) {

@@ -12,9 +12,9 @@ public interface ReviewStorage {
 
     void delete(Review review);
 
-    List<Review> getAll(Long filmId, int count);
+    List<Review> findAll(Long filmId, int count);
 
-    Optional<Review> getById(Long reviewId);
+    Optional<Review> findById(Long reviewId);
 
     Optional<Boolean> getReviewRating(Long reviewId, Long userId);
 
