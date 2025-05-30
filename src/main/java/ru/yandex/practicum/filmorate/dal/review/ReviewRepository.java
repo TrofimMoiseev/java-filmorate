@@ -144,8 +144,12 @@ public class ReviewRepository extends BaseRepository<Review> implements ReviewSt
     @Override
     public Optional<Boolean> getReviewRating(Long reviewId, Long userId) {
         String sql = "SELECT is_like FROM review_likes WHERE review_id = ? AND user_id = ?";
-        List<Boolean> result = jdbc.query(sql, (rs, rowNum) -> rs.getBoolean("is_like"), reviewId, userId);
-        return result.stream().findFirst();
+        try {
+            Boolean result = jdbc.queryForObject(sql, Boolean.class, reviewId, userId);
+            return Optional.ofNullable(result);
+        } catch (EmptyResultDataAccessException e) {
+            return Optional.empty();
+        }
     }
 
 
