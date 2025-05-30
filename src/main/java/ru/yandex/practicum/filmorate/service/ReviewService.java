@@ -66,10 +66,14 @@ public class ReviewService {
         validateLikeInput(reviewId, userId);
 
         Optional<Boolean> currentRating = reviewStorage.getReviewRating(reviewId, userId);
-        if (currentRating.isPresent() && !currentRating.get()) {
-            throw new ValidationException("Пользователь уже поставил дизлайк");
-        }
 
+        if (currentRating.isPresent()) {
+            if (!currentRating.get()) {
+                throw new ValidationException("Пользователь уже поставил дизлайк");
+            } else {
+                reviewStorage.deleteLike(reviewId, userId);
+            }
+        }
         reviewStorage.putDisLike(reviewId, userId);
     }
 
