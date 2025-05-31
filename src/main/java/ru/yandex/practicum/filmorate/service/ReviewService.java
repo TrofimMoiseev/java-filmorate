@@ -1,0 +1,117 @@
+    package ru.yandex.practicum.filmorate.service;
+
+    import lombok.RequiredArgsConstructor;
+    import lombok.extern.slf4j.Slf4j;
+    import org.springframework.stereotype.Service;
+    import ru.yandex.practicum.filmorate.exception.NotFoundException;
+    import ru.yandex.practicum.filmorate.exception.ValidationException;
+    import ru.yandex.practicum.filmorate.model.Review;
+    import ru.yandex.practicum.filmorate.storage.interfaceStorage.FilmStorage;
+    import ru.yandex.practicum.filmorate.storage.interfaceStorage.ReviewStorage;
+    import ru.yandex.practicum.filmorate.storage.interfaceStorage.UserStorage;
+    import java.util.List;
+    import java.util.Optional;
+
+    @Slf4j
+    @Service
+    @RequiredArgsConstructor
+    public class ReviewService {
+
+        private final ReviewStorage reviewStorage;
+        private final UserStorage userStorage;
+        private final FilmStorage filmStorage;
+
+
+        public Review create(Review review) {
+            validateReview(review);
+            return reviewStorage.create(review);
+        }
+
+        public Review update(Review review) {
+            Optional<Review> existing = reviewStorage.findById(review.getReviewId());
+            if (existing.isEmpty()) {
+                throw new ValidationException("Отзыв с id=" + review.getReviewId() + " не найден");
+            }
+            return reviewStorage.update(review);
+        }
+
+        public void delete(Long id) {
+            Review review = reviewStorage.findById(id)
+                    .orElseThrow(() -> new ValidationException("Отзыв с id=" + id + " не найден"));
+            reviewStorage.delete(review);
+        }
+
+        public Review findById(Long id) {
+            return reviewStorage.findById(id)
+                    .orElseThrow(() -> new NotFoundException("Отзыв с id=" + id + " не найден"));
+        }
+
+        public List<Review> findAll(Long filmId, Integer count) {
+            return reviewStorage.findAll(filmId, count != null ? count : 10);
+        }
+
+        public void putLike(Long reviewId, Long userId) {
+            validateLikeInput(reviewId, userId);
+
+            Optional<Boolean> currentRating = reviewStorage.getReviewRating(reviewId, userId);
+            if (currentRating.isPresent() && currentRating.get()) {
+                throw new ValidationException("Пользователь уже поставил лайк");
+            }
+
+            reviewStorage.putLike(reviewId, userId);
+        }
+
+        public void putDislike(Long reviewId, Long userId) {
+            validateLikeInput(reviewId, userId);
+
+            Optional<Boolean> currentRating = reviewStorage.getReviewRating(reviewId, userId);
+
+            if (currentRating.isPresent()) {
+                if (!currentRating.get()) {
+                    throw new ValidationException("Пользователь уже поставил дизлайк");
+                } else {
+                    reviewStorage.deleteLike(reviewId, userId);
+                }
+            }
+            reviewStorage.putDisLike(reviewId, userId);
+        }
+
+        public void deleteLike(Long reviewId, Long userId) {
+            validateLikeInput(reviewId, userId);
+            reviewStorage.deleteLike(reviewId, userId);
+        }
+
+        public void deleteDislike(Long reviewId, Long userId) {
+            validateLikeInput(reviewId, userId);
+            reviewStorage.deleteDisLike(reviewId, userId);
+        }
+
+        private void validateReview(Review review) {
+            Long userId = review.getUserId();
+            Long filmId = review.getFilmId();
+
+            if (userId == null) {
+                throw new ValidationException("Пользователь не указан (userId=null)");
+            }
+            if (filmId == null) {
+                throw new ValidationException("Фильм не указан (filmId=null)");
+            }
+
+            if (!userStorage.checkId(userId)) {
+                throw new NotFoundException("Пользователь с id=" + userId + " не существует");
+            }
+
+            if (!filmStorage.checkId(filmId)) {
+                throw new NotFoundException("Фильм с id=" + filmId + " не существует");
+            }
+        }
+
+        private void validateLikeInput(Long reviewId, Long userId) {
+            if (reviewStorage.findById(reviewId).isEmpty()) {
+                throw new ValidationException("Отзыв с id=" + reviewId + " не найден");
+            }
+            if (!userStorage.checkId(userId)) {
+                throw new ValidationException("Пользователь с id=" + userId + " не найден");
+            }
+        }
+    }
