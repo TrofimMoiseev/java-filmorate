@@ -97,4 +97,11 @@ public class FilmController { //работа с запросами
         log.info("Получен GET-запрос на поиск фильмов, режиссеров по ключевому слову.");
         return filmService.findFilmsDirectorsByQuery(query, by);
     }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteFilm(@PathVariable ("id") Long filmId) {
+        log.info("Получен DELETE-запрос на удаление фильма");
+        filmService.deleteFilm(filmId);
+    }
 }

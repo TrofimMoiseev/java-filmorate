@@ -6,6 +6,7 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
+import org.springframework.web.bind.annotation.PathVariable;
 import ru.yandex.practicum.filmorate.dal.BaseRepository;
 import ru.yandex.practicum.filmorate.dal.like.LikeRepository;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
@@ -60,6 +61,7 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
             LEFT JOIN director d ON fd.director_id = d.id
             LEFT JOIN likes l ON f.id = l.film_id
             """;
+    private static final String DELETE_QUERY = "DELETE FROM films WHERE id = ?";
 
     public FilmRepository(JdbcTemplate jdbc, RowMapper<Film> mapper, LikeRepository likeRepository) {
         super(jdbc, mapper);
@@ -292,6 +294,12 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
         commonFilms.forEach(this::setGenreAndRatingToFilm);
 
         return commonFilms;
+    }
+
+    @Override
+    public void deleteFilm(Long filmId) {
+        log.info("Обработка DELETE-запрос на удаление фильма в хранилище");
+        delete(DELETE_QUERY, filmId);
     }
 
     private void setGenreAndRatingToFilm(Film film) {

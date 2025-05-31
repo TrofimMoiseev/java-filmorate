@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PathVariable;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
@@ -136,6 +137,11 @@ public class FilmService { //логика обработки запросов
     public Collection<Film> findFilmsDirectorsByQuery(String query, String by) {
         log.info("Обработка GET-запроса на поиск фильмов, режиссеров по ключевому слову.");
         return filmStorage.findFilmsDirectorsByQuery(query, by);
+    }
+
+    public void deleteFilm(Long filmId) {
+        log.info("Обработка DELETE-запрос на удаление фильма");
+        filmStorage.deleteFilm(filmId);
     }
 
     private void check(Film film) {

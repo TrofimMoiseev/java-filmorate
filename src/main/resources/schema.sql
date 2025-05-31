@@ -45,14 +45,14 @@ create TABLE IF NOT EXISTS films (
 CREATE TABLE IF NOT EXISTS film_director (
     film_id BIGINT NOT NULL,
     director_id BIGINT NOT NULL,
-    FOREIGN KEY (film_id) REFERENCES films(id),
+    FOREIGN KEY (film_id) REFERENCES films(id) ON DELETE CASCADE,
     FOREIGN KEY (director_id) REFERENCES director(id)
 );
 
 CREATE TABLE IF NOT EXISTS film_genre (
     film_id BIGINT NOT NULL,
     genre_id BIGINT NOT NULL,
-    FOREIGN KEY (film_id) REFERENCES films(id),
+    FOREIGN KEY (film_id) REFERENCES films(id) ON DELETE CASCADE,
     FOREIGN KEY (genre_id) REFERENCES genre(id)
 );
 
@@ -68,8 +68,8 @@ create TABLE IF NOT EXISTS friendship (
     user_id BIGINT,
     friend_id BIGINT,
     PRIMARY KEY (user_id, friend_id),
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (friend_id) REFERENCES users(id)
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (friend_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 create TABLE IF NOT EXISTS reviews (
