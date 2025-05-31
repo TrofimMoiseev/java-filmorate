@@ -62,7 +62,7 @@ public class FilmController { //работа с запросами
     }
 
     @DeleteMapping("/{id}/like/{userId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
+    //@ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteLike(
             @PathVariable("id") Long filmId,
             @PathVariable Long userId

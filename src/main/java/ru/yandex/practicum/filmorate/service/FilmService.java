@@ -7,6 +7,7 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import lombok.extern.slf4j.Slf4j;
+import ru.yandex.practicum.filmorate.storage.interfaceStorage.DirectorStorage;
 import ru.yandex.practicum.filmorate.storage.interfaceStorage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.interfaceStorage.UserStorage;
 
@@ -22,6 +23,7 @@ public class FilmService { //логика обработки запросов
 
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
+    private final DirectorStorage directorStorage;
 
     public Film findFilmById(Long id) {
         log.info("Обработка GET-запроса на получение фильма по айди.");
@@ -44,6 +46,10 @@ public class FilmService { //логика обработки запросов
 
     public Collection<Film> findFilmsByDirectorId(Long id, String sortBy) {
         log.info("Обработка GET-запроса на получение фильмов по айди режиссера.");
+        if (directorStorage.findDirectorById(id).isEmpty()) {
+            log.warn("Режиссер с id = {} не найден", id);
+            throw new NotFoundException("Режиссер с id = " + id + " не найден");
+        }
         return filmStorage.findFilmsByDirectorId(id, sortBy);
     }
 
@@ -75,8 +81,7 @@ public class FilmService { //логика обработки запросов
         }
 
         if (newFilm.getReleaseDate() != null &&
-                !newFilm.getReleaseDate().isBefore(LocalDate.of(1895, Month.DECEMBER, 28)) &&
-                !newFilm.getReleaseDate().isAfter(LocalDate.now())) {
+                !newFilm.getReleaseDate().isBefore(LocalDate.of(1895, Month.DECEMBER, 28))) {
             film.setReleaseDate(newFilm.getReleaseDate());
         }
 
@@ -146,8 +151,7 @@ public class FilmService { //логика обработки запросов
             log.warn("Валидация не пройдена — описание превышает 200 символов");
             throw new ValidationException("Количество символов превышает допустимое количество");
         } else if (film.getReleaseDate() == null ||
-                film.getReleaseDate().isBefore(LocalDate.of(1895, Month.DECEMBER, 28)) ||
-                film.getReleaseDate().isAfter(LocalDate.now())) {
+                film.getReleaseDate().isBefore(LocalDate.of(1895, Month.DECEMBER, 28))) {
             log.warn("Валидация не пройдена — слишком старая дата релиза: {}", film.getReleaseDate());
             throw new ValidationException("Дата релиза указана неверно");
         } else if (film.getDuration() == null || film.getDuration() <= 0) {

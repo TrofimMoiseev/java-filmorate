@@ -69,7 +69,13 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
 
     @Override
     public List<Film> findAll() {
-        return findMany(FIND_ALL_QUERY);
+        List<Film> films = findMany(FIND_ALL_QUERY);
+
+        for (Film film : films) {
+            setGenreAndRatingToFilm(film);
+            setDirectorsToFilm(film);
+        }
+        return films;
     }
 
     @Override
@@ -223,7 +229,14 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     @Override
     public Collection<Film> findPopular(int count) {
         log.debug("Запрос популярных фильмов в хранилище");
-        return likeRepository.findPopularFilms(count);
+        Collection<Film> films = likeRepository.findPopularFilms(count);
+
+        for (Film film : films) {
+            setGenreAndRatingToFilm(film);
+            setDirectorsToFilm(film);
+        }
+
+        return films;
     }
 
     @Override

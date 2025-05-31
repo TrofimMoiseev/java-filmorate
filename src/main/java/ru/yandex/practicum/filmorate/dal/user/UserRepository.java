@@ -77,13 +77,13 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
 
     @Override
     public User update(User user) {
-        log.info("Запрос на бновление пользователя в базе данных: email={}, login={}, name={}, birthday={}, id={}",
+        log.info("Запрос на обновление пользователя в базе данных: email={}, login={}, name={}, birthday={}, id={}",
                 user.getEmail(), user.getLogin(), user.getName(), Date.valueOf(user.getBirthday()), user.getId());
 
         update(UPDATE_QUERY,
+                user.getEmail(),
                 user.getLogin(),
                 user.getName(),
-                user.getEmail(),
                 Date.valueOf(user.getBirthday()),
                 user.getId());
         log.debug("Пользователь ({}) обновлен в базе данных", user.getId());

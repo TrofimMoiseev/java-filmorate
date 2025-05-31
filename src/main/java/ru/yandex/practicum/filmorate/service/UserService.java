@@ -25,8 +25,8 @@ public class UserService {
 
         return userStorage.findUserById(id)
                 .orElseThrow(() -> {
-                        log.warn("Фильм с id = {} не найден", id);
-        return new NotFoundException("Фильм с id = " + id + " не найден");
+                        log.warn("Пользователь с id = {} не найден", id);
+        return new NotFoundException("Пользователь с id = " + id + " не найден");
                 });
     }
 
@@ -77,8 +77,8 @@ public class UserService {
 
         User user = userStorage.findUserById(newUser.getId())
                 .orElseThrow(() -> {
-                    log.warn("Фильм с id = {} не найден", newUser.getId());
-                    return new NotFoundException("Фильм с id = " + newUser.getId() + " не найден");
+                    log.warn("Пользователь с id = {} не найден", newUser.getId());
+                    return new NotFoundException("Пользователь с id = " + newUser.getId() + " не найден");
                 });
 
         if (newUser.getEmail() != null && !newUser.getEmail().isBlank() && !newUser.getEmail().equals(user.getEmail())) {
@@ -100,7 +100,7 @@ public class UserService {
         if (newUser.getBirthday() != null && !newUser.getBirthday().isAfter(LocalDate.now())) {
             user.setBirthday(newUser.getBirthday());
         }
-        return userStorage.update(newUser);
+        return userStorage.update(user);
     }
 
     public void putFriend(Long userId, Long friendId) {
