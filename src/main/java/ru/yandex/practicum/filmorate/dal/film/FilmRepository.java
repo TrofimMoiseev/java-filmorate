@@ -62,15 +62,15 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
             """;
 
     private static final String FIND_POPULAR = """
-            SELECT f.id, f.name, f.description, f.release_date, f.duration, f.rating_id
-            FROM films f
-            LEFT JOIN likes l ON f.id = l.film_id
-            LEFT JOIN film_genre fg ON f.id = fg.film_id
-            WHERE (:genreId IS NULL OR fg.genre_id = :genreId)
-            AND (:year IS NULL OR EXTRACT(YEAR FROM f.release_date) = :year)
-            GROUP BY f.id
-            ORDER BY COUNT(l.user_id) DESC
-            LIMIT :count
+    SELECT f.id, f.name, f.description, f.release_date, f.duration, f.rating_id
+    FROM films f
+    LEFT JOIN likes l ON f.id = l.film_id
+    LEFT JOIN film_genre fg ON f.id = fg.film_id
+    WHERE (? IS NULL OR fg.genre_id = ?)
+      AND (? IS NULL OR EXTRACT(YEAR FROM f.release_date) = ?)
+    GROUP BY f.id
+    ORDER BY COUNT(l.user_id) DESC
+    LIMIT ?
     """;
 
 
