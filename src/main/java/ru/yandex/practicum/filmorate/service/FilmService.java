@@ -18,7 +18,7 @@ import java.util.Collection;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class FilmService { //логика обработки запросов
+public class FilmService {
 
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
