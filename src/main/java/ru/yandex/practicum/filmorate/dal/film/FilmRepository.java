@@ -238,22 +238,16 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     public Collection<Film> findPopular(int count, Integer genreId, Integer year) {
         log.debug("Запрос популярных фильмов с count={}, genreId={}, year={}", count, genreId, year);
 
-        String baseQuery = FIND_POPULAR;
-        Map<String, Object> params = new HashMap<>();
-        params.put("count", count);
-        params.put("genreId", genreId);
-        params.put("year", year);
-
-        NamedParameterJdbcTemplate namedJdbc = new NamedParameterJdbcTemplate(jdbc);
-        List<Film> films = namedJdbc.query(baseQuery, params, getMapper());
-
-        for (Film film : films) {
+        return findMany(FIND_POPULAR,
+                genreId, genreId,
+                year, year,
+                count
+        ).stream().peek(film -> {
             setGenreAndRatingToFilm(film);
             setDirectorsToFilm(film);
-        }
-
-        return films;
+        }).toList();
     }
+
 
     @Override
     public Collection<Film> findFilmsByDirectorId(Long id, String sortBy) {

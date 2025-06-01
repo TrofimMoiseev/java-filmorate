@@ -36,7 +36,6 @@ public class FilmController { //работа с запросами
                                         @RequestParam(required = false) Integer genreId,
                                         @RequestParam(required = false) Integer year) {
 
-        if (count == null || count <= 0) count = 10;
         if (year == null) {
             log.info("Параметр year не передан — фильтрация по году не применяется.");
         }
