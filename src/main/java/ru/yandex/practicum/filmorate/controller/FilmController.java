@@ -6,10 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
-
-import java.time.LocalDate;
 import java.util.Collection;
-import java.util.List;
 
 
 @Slf4j
@@ -37,7 +34,7 @@ public class FilmController { //работа с запросами
     @GetMapping("/popular")
     public Collection<Film> findPopular(@RequestParam(required = false, defaultValue = "10") Integer count,
                                         @RequestParam(required = false) Integer genreId,
-                                        @RequestParam(required = false) Integer year){
+                                        @RequestParam(required = false) Integer year) {
 
         if (count == null || count <= 0) count = 10;
         if (year == null) {
