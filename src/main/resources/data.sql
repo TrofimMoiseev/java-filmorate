@@ -10,3 +10,11 @@ INSERT INTO genre (name) VALUES ('Мультфильм');
 INSERT INTO genre (name) VALUES ('Триллер');
 INSERT INTO genre (name) VALUES ('Документальный');
 INSERT INTO genre (name) VALUES ('Боевик');
+
+INSERT INTO event_type (name) VALUES ('LIKE');
+INSERT INTO event_type (name) VALUES ('REVIEW');
+INSERT INTO event_type (name) VALUES ('FRIEND');
+
+INSERT INTO operation (name) VALUES ('ADD');
+INSERT INTO operation (name) VALUES ('UPDATE');
+INSERT INTO operation (name) VALUES ('REMOVE');

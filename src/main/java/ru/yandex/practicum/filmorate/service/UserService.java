@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import ru.yandex.practicum.filmorate.DTO.FeedDTO;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
@@ -65,6 +66,13 @@ public class UserService {
         }
 
         return userStorage.create(user);
+    }
+
+    public Collection<FeedDTO> getFeeds(Long id) {
+        if (!userStorage.checkId(id)) {
+            throw new NotFoundException("Пользователь с id = " + id + " не найден");
+        }
+        return userStorage.getFeeds(id);
     }
 
     public User update(User newUser) {
