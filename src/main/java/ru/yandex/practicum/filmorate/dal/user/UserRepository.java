@@ -36,6 +36,7 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
     private static final String INSERT_QUERY = "INSERT INTO users(login, name, email, birthday)" +
             "VALUES (?, ?, ?, ?)";
     private static final String UPDATE_QUERY = "UPDATE users SET email = ?, login = ?, name = ?, birthday = ? WHERE id = ?";
+    private static final String DELETE_QUERY = "DELETE FROM users WHERE id = ?";
 
     @Override
     public List<User> findAll() {
@@ -77,7 +78,7 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
 
     @Override
     public User update(User user) {
-        log.info("Запрос на бновление пользователя в базе данных: email={}, login={}, name={}, birthday={}, id={}",
+        log.info("Запрос на обновление пользователя в базе данных: email={}, login={}, name={}, birthday={}, id={}",
                 user.getEmail(), user.getLogin(), user.getName(), Date.valueOf(user.getBirthday()), user.getId());
 
         update(UPDATE_QUERY,
@@ -100,6 +101,12 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
     public void deleteFriend(Long userId, Long friendId) {
         log.debug("Запрос удаления из друзей от пользователя в хранилище");
         friendshipRepository.deleteFriend(userId, friendId);
+    }
+
+    @Override
+    public void deleteUser(Long userId) {
+        log.debug("Запрос удаления пользователя в хранилище");
+        delete(DELETE_QUERY, userId);
     }
 
     @Override

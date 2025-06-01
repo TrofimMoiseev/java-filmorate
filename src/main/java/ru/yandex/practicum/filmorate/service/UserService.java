@@ -129,6 +129,14 @@ public class UserService {
         log.info("Пользователь с ID = {} удалил из друзей пользователя с ID = {}", userId, friendId);
     }
 
+    public void deleteUser(Long userId) {
+        log.info("Получен Delete-запрос на удаление пользователя");
+        if (!userStorage.checkId(userId)) {
+            throw new NotFoundException("Пользователь с id = " + userId + " не найден");
+        }
+        userStorage.deleteUser(userId);
+    }
+
     private void check(User newUser) {
         if (newUser.getEmail() == null || newUser.getEmail().isBlank() || !newUser.getEmail().contains("@")) {
             log.warn("Валидация не пройдена — некорректный email: {}", newUser.getEmail());
