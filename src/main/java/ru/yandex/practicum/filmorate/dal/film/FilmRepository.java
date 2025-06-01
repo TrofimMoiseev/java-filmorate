@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.dal.film;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
@@ -60,6 +61,19 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
             LEFT JOIN director d ON fd.director_id = d.id
             LEFT JOIN likes l ON f.id = l.film_id
             """;
+
+    private static final String FIND_POPULAR = """
+            SELECT f.id, f.name, f.description, f.release_date, f.duration, f.rating_id
+            FROM films f
+            LEFT JOIN likes l ON f.id = l.film_id
+            LEFT JOIN film_genre fg ON f.id = fg.film_id
+            WHERE (:genreId IS NULL OR fg.genre_id = :genreId)
+            AND (:year IS NULL OR EXTRACT(YEAR FROM f.release_date) = :year)
+            GROUP BY f.id
+            ORDER BY COUNT(l.user_id) DESC
+            LIMIT :count
+    """;
+
 
     public FilmRepository(JdbcTemplate jdbc, RowMapper<Film> mapper, LikeRepository likeRepository) {
         super(jdbc, mapper);
@@ -221,9 +235,24 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     }
 
     @Override
-    public Collection<Film> findPopular(int count) {
-        log.debug("Запрос популярных фильмов в хранилище");
-        return likeRepository.findPopularFilms(count);
+    public Collection<Film> findPopular(int count, Integer genreId, Integer year) {
+        log.debug("Запрос популярных фильмов с count={}, genreId={}, year={}", count, genreId, year);
+
+        String baseQuery = FIND_POPULAR;
+        Map<String, Object> params = new HashMap<>();
+        params.put("count", count);
+        params.put("genreId", genreId);
+        params.put("year", year);
+
+        NamedParameterJdbcTemplate namedJdbc = new NamedParameterJdbcTemplate(jdbc);
+        List<Film> films = namedJdbc.query(baseQuery, params, getMapper());
+
+        for (Film film : films) {
+            setGenreAndRatingToFilm(film);
+            setDirectorsToFilm(film);
+        }
+
+        return films;
     }
 
     @Override

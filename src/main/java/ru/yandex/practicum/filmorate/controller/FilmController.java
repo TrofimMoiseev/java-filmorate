@@ -7,7 +7,9 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
+import java.time.LocalDate;
 import java.util.Collection;
+import java.util.List;
 
 
 @Slf4j
@@ -33,9 +35,18 @@ public class FilmController { //работа с запросами
     }
 
     @GetMapping("/popular")
-    public Collection<Film> findPopular(@RequestParam(required = false, defaultValue = "10") int count) {
-        log.info("Получен GET-запрос на получение популярных фильмов.");
-        return filmService.findPopular(count);
+    public Collection<Film> findPopular(@RequestParam(required = false, defaultValue = "10") Integer count,
+                                        @RequestParam(required = false) Integer genreId,
+                                        @RequestParam(required = false) Integer year){
+
+        if (count == null || count <= 0) count = 10;
+        if (year == null) {
+            log.info("Параметр year не передан — фильтрация по году не применяется.");
+        }
+        log.info("GET /films/popular: Получение {} популярных фильмов. Жанр: {}, Год: {}", count, genreId, year);
+        Collection<Film> films = filmService.findPopular(count, genreId, year);
+        log.info("GET /films/popular: Возвращено {} популярных фильмов.", films.size());
+        return films;
     }
 
     @ResponseStatus(HttpStatus.CREATED)
