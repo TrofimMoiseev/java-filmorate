@@ -74,6 +74,13 @@ public class UserController {
         userService.putFriend(userId, friendId);
     }
 
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteUser(@PathVariable ("id") Long userId) {
+        log.info("Получен Delete-запрос на удаление пользователя");
+        userService.deleteUser(userId);
+    }
+
     @DeleteMapping("/{id}/friends/{friendId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteFriend(

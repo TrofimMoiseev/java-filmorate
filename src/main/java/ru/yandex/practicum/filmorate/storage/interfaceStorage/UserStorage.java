@@ -27,4 +27,7 @@ public interface UserStorage {
     Collection<User> getCommonFriends(Long userId, Long friendId);
 
     Collection<FeedDTO> getFeeds(Long id);
+
+    void deleteUser(Long userId);
+
 }

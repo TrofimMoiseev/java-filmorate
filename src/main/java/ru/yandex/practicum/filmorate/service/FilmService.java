@@ -138,6 +138,11 @@ public class FilmService { //логика обработки запросов
         return filmStorage.findFilmsDirectorsByQuery(query, by);
     }
 
+    public void deleteFilm(Long filmId) {
+        log.info("Обработка DELETE-запрос на удаление фильма");
+        filmStorage.deleteFilm(filmId);
+    }
+
     private void check(Film film) {
         if (film.getName() == null || film.getName().isBlank()) {
             log.warn("Валидация не пройдена — имя фильма отсутствует");
