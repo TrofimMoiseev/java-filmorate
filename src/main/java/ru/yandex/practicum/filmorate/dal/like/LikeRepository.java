@@ -12,7 +12,6 @@ import ru.yandex.practicum.filmorate.model.Feed;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Like;
 
-import java.time.Instant;
 import java.util.Collection;
 
 @Slf4j
@@ -44,13 +43,13 @@ public class LikeRepository extends BaseRepository<Like> {
 
     public void putLike(Long userId, Long filmId) {
         log.debug("Запрос лайка от пользователя (Id: {}) на фильм (Id: {})", userId, filmId);
-        feedRepository.create(new Feed (userId, filmId, 1L, 1L));
+        feedRepository.create(new Feed(userId, filmId, 1L, 1L));
         jdbc.update(INSERT_QUERY, userId, filmId);
     }
 
     public void deleteLike(Long userId, Long filmId) {
         log.debug("Запрос удаления лайка пользователя (Id: {}) с фильма (Id: {})", userId, filmId);
-        feedRepository.create(new Feed (userId, filmId, 1L, 3L));
+        feedRepository.create(new Feed(userId, filmId, 1L, 3L));
         jdbc.update(DELETE_QUERY, userId, filmId);
     }
 
