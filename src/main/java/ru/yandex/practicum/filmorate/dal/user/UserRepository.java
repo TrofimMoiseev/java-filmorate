@@ -139,28 +139,33 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
     public Collection<Film> getRecommendations(Long userId) {
         log.debug("Получение рекомендаций для пользователя с id={}", userId);
 
-        Long similarUserId = jdbc.queryForObject(FIND_COMMON_LIKES, Long.class, userId, userId);
-        if (similarUserId == null) {
-            log.warn("Похожий пользователь не найден для id={}", userId);
+        try {
+            Long similarUserId = jdbc.queryForObject(FIND_COMMON_LIKES, Long.class, userId, userId);
+
+            if (similarUserId == null) {
+                log.warn("Похожий пользователь не найден для id={}", userId);
+                return Collections.emptyList();
+            }
+
+            Collection<Film> filmsLikedBySimilarUser = jdbc.query(FIND_FILMS_LIKED_BY_USER, new FilmRowMapper(), similarUserId);
+            log.debug("Найдено фильмов, лайкнутых похожим пользователем: {}", filmsLikedBySimilarUser.size());
+
+            Collection<Film> filmsNotLikedByUser = jdbc.query(FIND_FILMS_NOT_LIKED_BY_USER, new FilmRowMapper(), userId);
+            log.debug("Найдено фильмов, которые не лайкнул текущий пользователь: {}", filmsNotLikedByUser.size());
+
+            filmsLikedBySimilarUser.retainAll(filmsNotLikedByUser);
+
+            if (filmsLikedBySimilarUser.isEmpty()) {
+                log.debug("Нет фильмов для рекомендации для пользователя с id={}", userId);
+                return Collections.emptyList();
+            }
+
+            return filmsLikedBySimilarUser;
+        } catch (Exception e) {
+            log.error("Ошибка при получении рекомендаций для пользователя с id={}", userId, e);
             return Collections.emptyList();
         }
-
-        Collection<Film> filmsLikedBySimilarUser = jdbc.query(FIND_FILMS_LIKED_BY_USER, new FilmRowMapper(), similarUserId);
-        log.debug("Найдено фильмов, лайкнутых похожим пользователем: {}", filmsLikedBySimilarUser.size());
-
-        Collection<Film> filmsNotLikedByUser = jdbc.query(FIND_FILMS_NOT_LIKED_BY_USER, new FilmRowMapper(), userId);
-        log.debug("Найдено фильмов, которые не лайкнул текущий пользователь: {}", filmsNotLikedByUser.size());
-
-        filmsLikedBySimilarUser.retainAll(filmsNotLikedByUser);
-
-        if (filmsLikedBySimilarUser.isEmpty()) {
-            log.debug("Нет фильмов для рекомендации для пользователя с id={}", userId);
-        }
-
-        return filmsLikedBySimilarUser;
     }
-
-
 
     @Override
     public boolean checkId(Long id) {
