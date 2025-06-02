@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.interfaceStorage.UserStorage;
 
@@ -152,4 +153,10 @@ public class UserService {
             throw new ValidationException("Дата рождения указана неверно");
         }
     }
+
+    public Collection<Film> getRecommendations(Long userId) {
+        log.debug("Получение рекомендаций для пользователя с id={}", userId);
+        return userStorage.getRecommendations(userId);
+    }
+
 }

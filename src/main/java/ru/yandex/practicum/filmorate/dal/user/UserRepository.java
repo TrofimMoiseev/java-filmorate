@@ -7,17 +7,16 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.dal.BaseRepository;
+import ru.yandex.practicum.filmorate.dal.film.FilmRowMapper;
 import ru.yandex.practicum.filmorate.dal.friendship.FriendshipRepository;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.interfaceStorage.UserStorage;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @Slf4j
 @Repository
@@ -37,6 +36,33 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
             "VALUES (?, ?, ?, ?)";
     private static final String UPDATE_QUERY = "UPDATE users SET email = ?, login = ?, name = ?, birthday = ? WHERE id = ?";
     private static final String DELETE_QUERY = "DELETE FROM users WHERE id = ?";
+
+    private static final String FIND_COMMON_LIKES = """
+        SELECT u.id, COUNT(*) as common_likes
+        FROM likes l1
+        JOIN likes l2 ON l1.film_id = l2.film_id
+        JOIN users u ON l2.user_id = u.id
+        WHERE l1.user_id = ?
+        AND u.id != ?
+        GROUP BY u.id
+        ORDER BY common_likes DESC
+        LIMIT 1
+    """;
+
+    private static final String FIND_FILMS_LIKED_BY_USER = """
+        SELECT f.id, f.name, f.description, f.release_date, f.duration, f.rating_id
+        FROM films f
+        JOIN likes l ON f.id = l.film_id
+        WHERE l.user_id = ?
+    """;
+
+    private static final String FIND_FILMS_NOT_LIKED_BY_USER = """
+        SELECT f.id, f.name, f.description, f.release_date, f.duration, f.rating_id
+        FROM films f
+        WHERE f.id NOT IN (
+            SELECT film_id FROM likes WHERE user_id = ?
+        )
+    """;
 
     @Override
     public List<User> findAll() {
@@ -108,6 +134,23 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
         log.debug("Запрос удаления пользователя в хранилище");
         delete(DELETE_QUERY, userId);
     }
+
+    @Override
+    public Collection<Film> getRecommendations(Long userId) {
+        Long similarUserId = jdbc.queryForObject(FIND_COMMON_LIKES, Long.class, userId, userId);
+
+        if (similarUserId != null) {
+            Collection<Film> filmsLikedBySimilarUser = jdbc.query(FIND_FILMS_LIKED_BY_USER, new FilmRowMapper(), similarUserId);
+
+            Collection<Film> filmsNotLikedByUser = jdbc.query(FIND_FILMS_NOT_LIKED_BY_USER, new FilmRowMapper(), userId);
+
+            filmsLikedBySimilarUser.retainAll(filmsNotLikedByUser);
+            return filmsLikedBySimilarUser;
+        } else {
+            return Collections.emptyList();
+        }
+    }
+
 
     @Override
     public boolean checkId(Long id) {
