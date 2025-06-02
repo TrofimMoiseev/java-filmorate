@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 
 import ru.yandex.practicum.filmorate.DTO.FeedDTO;
 import ru.yandex.practicum.filmorate.dal.film.FilmRepository;
-import ru.yandex.practicum.filmorate.dal.user.UserRepository;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
@@ -15,9 +14,7 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.interfaceStorage.UserStorage;
 
 import java.time.LocalDate;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Optional;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -161,32 +158,17 @@ public class UserService {
     }
 
     public Collection<Film> getRecommendations(Long userId) {
-        log.debug("Получение рекомендаций для пользователя с id={}", userId);
-
         if (!userStorage.checkId(userId)) {
             log.warn("Пользователь с id={} не найден", userId);
-            return Collections.emptyList();
+            throw new NotFoundException("Пользователь с id=" + userId + " не найден");
         }
 
-        Optional<Long> similarUserIdOpt = ((UserRepository) userStorage).findSimilarUserId(userId);
+        List<User> similarUsers = userStorage.findSimilarUsers(userId);
+        Long similarUserId = similarUsers.get(0).getId();
 
-        if (similarUserIdOpt.isEmpty()) {
-            log.warn("Похожий пользователь не найден для пользователя id={}", userId);
-            return Collections.emptyList();
-        }
-
-        Long similarUserId = similarUserIdOpt.get();
-
-        Collection<Film> recommendations = filmRepository.findRecommendationsByUser(similarUserId, userId);
-
-        if (recommendations.isEmpty()) {
-            log.debug("Нет фильмов для рекомендации для пользователя с id={}", userId);
-        } else {
-            log.debug("Найдено {} фильмов для рекомендации пользователю с id={}", recommendations.size(), userId);
-        }
-
-        return recommendations;
+        return filmRepository.findRecommendationsByUser(similarUserId, userId);
     }
+
 
     public Collection<FeedDTO> getFeeds(Long id) {
         if (!userStorage.checkId(id)) {

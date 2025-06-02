@@ -4,6 +4,7 @@ import ru.yandex.practicum.filmorate.DTO.FeedDTO;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 public interface UserStorage {
@@ -27,6 +28,8 @@ public interface UserStorage {
     Collection<User> getCommonFriends(Long userId, Long friendId);
 
     Collection<FeedDTO> getFeeds(Long id);
+
+    List<User> findSimilarUsers(Long userId);
 
     void deleteUser(Long userId);
 

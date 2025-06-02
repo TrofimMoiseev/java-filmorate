@@ -39,8 +39,8 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
     private static final String UPDATE_QUERY = "UPDATE users SET email = ?, login = ?, name = ?, birthday = ? WHERE id = ?";
     private static final String DELETE_QUERY = "DELETE FROM users WHERE id = ?";
 
-    private static final String FIND_COMMON_LIKES = """
-        SELECT u.id
+    private static final String FIND_COMMON_LIKES_USERS = """
+        SELECT u.*
         FROM likes l1
         JOIN likes l2 ON l1.film_id = l2.film_id
         JOIN users u ON l2.user_id = u.id
@@ -48,7 +48,7 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
         AND u.id != ?
         GROUP BY u.id
         ORDER BY COUNT(*) DESC
-        LIMIT 1;
+        LIMIT 1
     """;
 
     @Override
@@ -127,14 +127,8 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
         delete(DELETE_QUERY, userId);
     }
 
-    public Optional<Long> findSimilarUserId(Long userId) {
-        try {
-            Long similarUserId = jdbc.queryForObject(FIND_COMMON_LIKES, Long.class, userId, userId);
-            return Optional.ofNullable(similarUserId);
-        } catch (Exception e) {
-            log.warn("Похожий пользователь не найден для id={}", userId);
-            return Optional.empty();
-        }
+    public List<User> findSimilarUsers(Long userId) {
+        return findMany(FIND_COMMON_LIKES_USERS, userId, userId);
     }
 
     @Override

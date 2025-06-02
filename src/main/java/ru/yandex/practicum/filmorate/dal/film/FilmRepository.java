@@ -10,10 +10,7 @@ import ru.yandex.practicum.filmorate.dal.BaseRepository;
 import ru.yandex.practicum.filmorate.dal.like.LikeRepository;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
-import ru.yandex.practicum.filmorate.model.Director;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.model.*;
 import ru.yandex.practicum.filmorate.storage.interfaceStorage.FilmStorage;
 
 import java.sql.Date;
@@ -362,7 +359,7 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
         film.setDirectors(directors);
     }
 
-    public Collection<Film> findRecommendationsByUser(Long similarUserId, Long userId) {
+    public List<Film> findRecommendationsByUser(Long similarUserId, Long userId) {
         return jdbc.query(RECOMMENDATION_QUERY, new FilmRowMapper(), similarUserId, userId);
     }
 }
