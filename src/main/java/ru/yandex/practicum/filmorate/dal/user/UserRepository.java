@@ -38,15 +38,15 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
     private static final String DELETE_QUERY = "DELETE FROM users WHERE id = ?";
 
     private static final String FIND_COMMON_LIKES = """
-        SELECT u.id, COUNT(*) as common_likes
+        SELECT u.id
         FROM likes l1
         JOIN likes l2 ON l1.film_id = l2.film_id
         JOIN users u ON l2.user_id = u.id
         WHERE l1.user_id = ?
         AND u.id != ?
         GROUP BY u.id
-        ORDER BY common_likes DESC
-        LIMIT 1
+        ORDER BY COUNT(*) DESC
+        LIMIT 1;
     """;
 
     private static final String FIND_FILMS_LIKED_BY_USER = """
