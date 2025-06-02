@@ -49,6 +49,16 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
         LIMIT 1;
     """;
 
+    private static final String RECOMMENDATION_QUERY = """
+    SELECT f.id, f.name, f.description, f.release_date, f.duration, f.rating_id
+    FROM films f
+    JOIN likes l_sim ON f.id = l_sim.film_id
+    WHERE l_sim.user_id = ?
+    AND f.id NOT IN (
+        SELECT film_id FROM likes WHERE user_id = ?
+    )
+    """;
+
     @Override
     public List<User> findAll() {
         return findMany(FIND_ALL_QUERY);
@@ -131,16 +141,6 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
                 log.warn("Похожий пользователь не найден для id={}", userId);
                 return Collections.emptyList();
             }
-
-            String RECOMMENDATION_QUERY = """
-            SELECT f.id, f.name, f.description, f.release_date, f.duration, f.rating_id
-            FROM films f
-            JOIN likes l_sim ON f.id = l_sim.film_id
-            WHERE l_sim.user_id = ?
-            AND f.id NOT IN (
-                SELECT film_id FROM likes WHERE user_id = ?
-            )
-            """;
 
             Collection<Film> recommendations = jdbc.query(RECOMMENDATION_QUERY, new FilmRowMapper(), similarUserId, userId);
 
