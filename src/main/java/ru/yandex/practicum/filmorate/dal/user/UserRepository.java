@@ -7,9 +7,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.dal.BaseRepository;
-import ru.yandex.practicum.filmorate.dal.film.FilmRowMapper;
 import ru.yandex.practicum.filmorate.dal.friendship.FriendshipRepository;
-import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.interfaceStorage.UserStorage;
 
@@ -47,16 +45,6 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
         GROUP BY u.id
         ORDER BY COUNT(*) DESC
         LIMIT 1;
-    """;
-
-    private static final String RECOMMENDATION_QUERY = """
-    SELECT f.id, f.name, f.description, f.release_date, f.duration, f.rating_id
-    FROM films f
-    JOIN likes l_sim ON f.id = l_sim.film_id
-    WHERE l_sim.user_id = ?
-    AND f.id NOT IN (
-        SELECT film_id FROM likes WHERE user_id = ?
-    )
     """;
 
     @Override
@@ -130,36 +118,19 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
         delete(DELETE_QUERY, userId);
     }
 
-    @Override
-    public Collection<Film> getRecommendations(Long userId) {
-        log.debug("Получение рекомендаций для пользователя с id={}", userId);
-
+    public Optional<Long> findSimilarUserId(Long userId) {
         try {
             Long similarUserId = jdbc.queryForObject(FIND_COMMON_LIKES, Long.class, userId, userId);
-
-            if (similarUserId == null) {
-                log.warn("Похожий пользователь не найден для id={}", userId);
-                return Collections.emptyList();
-            }
-
-            Collection<Film> recommendations = jdbc.query(RECOMMENDATION_QUERY, new FilmRowMapper(), similarUserId, userId);
-
-            if (recommendations.isEmpty()) {
-                log.debug("Нет фильмов для рекомендации для пользователя с id={}", userId);
-            } else {
-                log.debug("Найдено {} фильмов для рекомендации пользователю с id={}", recommendations.size(), userId);
-            }
-
-            return recommendations;
+            return Optional.ofNullable(similarUserId);
         } catch (Exception e) {
-            log.error("Ошибка при получении рекомендаций для пользователя с id={}", userId, e);
-            return Collections.emptyList();
+            log.warn("Похожий пользователь не найден для id={}", userId);
+            return Optional.empty();
         }
     }
 
-
     @Override
     public boolean checkId(Long id) {
-        return checkId(CHECK_USER_ID, id);
+        Integer count = jdbc.queryForObject(CHECK_USER_ID, Integer.class, id);
+        return count != null && count > 0;
     }
 }

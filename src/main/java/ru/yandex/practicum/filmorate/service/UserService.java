@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import ru.yandex.practicum.filmorate.dal.film.FilmRepository;
+import ru.yandex.practicum.filmorate.dal.user.UserRepository;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
@@ -13,6 +15,8 @@ import ru.yandex.practicum.filmorate.storage.interfaceStorage.UserStorage;
 
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -20,6 +24,7 @@ import java.util.Collection;
 public class UserService {
 
     private final UserStorage userStorage;
+    private final FilmRepository filmRepository;
 
     public User findUserById(Long id) {
         log.info("Обработка GET-запроса на получение пользователя по id.");
@@ -156,7 +161,30 @@ public class UserService {
 
     public Collection<Film> getRecommendations(Long userId) {
         log.debug("Получение рекомендаций для пользователя с id={}", userId);
-        return userStorage.getRecommendations(userId);
+
+        if (!userStorage.checkId(userId)) {
+            log.warn("Пользователь с id={} не найден", userId);
+            return Collections.emptyList();
+        }
+
+        Optional<Long> similarUserIdOpt = ((UserRepository) userStorage).findSimilarUserId(userId);
+
+        if (similarUserIdOpt.isEmpty()) {
+            log.warn("Похожий пользователь не найден для пользователя id={}", userId);
+            return Collections.emptyList();
+        }
+
+        Long similarUserId = similarUserIdOpt.get();
+
+        Collection<Film> recommendations = filmRepository.findRecommendationsByUser(similarUserId, userId);
+
+        if (recommendations.isEmpty()) {
+            log.debug("Нет фильмов для рекомендации для пользователя с id={}", userId);
+        } else {
+            log.debug("Найдено {} фильмов для рекомендации пользователю с id={}", recommendations.size(), userId);
+        }
+
+        return recommendations;
     }
 
 }

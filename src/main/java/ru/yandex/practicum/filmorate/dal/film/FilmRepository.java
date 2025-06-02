@@ -60,6 +60,16 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
             LEFT JOIN director d ON fd.director_id = d.id
             LEFT JOIN likes l ON f.id = l.film_id
             """;
+
+    private static final String RECOMMENDATION_QUERY = """
+        SELECT f.id, f.name, f.description, f.release_date, f.duration, f.rating_id
+        FROM films f
+        JOIN likes l_sim ON f.id = l_sim.film_id
+        WHERE l_sim.user_id = ?
+        AND f.id NOT IN (
+            SELECT film_id FROM likes WHERE user_id = ?
+        )
+    """;
     private static final String DELETE_QUERY = "DELETE FROM films WHERE id = ?";
 
     public FilmRepository(JdbcTemplate jdbc, RowMapper<Film> mapper, LikeRepository likeRepository) {
@@ -328,5 +338,9 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
         }, film.getId()));
 
         film.setDirectors(directors);
+    }
+
+    public Collection<Film> findRecommendationsByUser(Long similarUserId, Long userId) {
+        return jdbc.query(RECOMMENDATION_QUERY, new FilmRowMapper(), similarUserId, userId);
     }
 }
