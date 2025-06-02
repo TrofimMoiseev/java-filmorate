@@ -6,8 +6,10 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.DTO.FeedDTO;
 import ru.yandex.practicum.filmorate.dal.BaseRepository;
 import ru.yandex.practicum.filmorate.dal.film.FilmRowMapper;
+import ru.yandex.practicum.filmorate.dal.feed.FeedRepository;
 import ru.yandex.practicum.filmorate.dal.friendship.FriendshipRepository;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
@@ -22,12 +24,8 @@ import java.util.*;
 @Repository
 public class UserRepository extends BaseRepository<User> implements UserStorage {
 
-    FriendshipRepository friendshipRepository;
-
-    public UserRepository(JdbcTemplate jdbc, RowMapper<User> mapper, FriendshipRepository friendshipRepository) {
-        super(jdbc, mapper);
-        this.friendshipRepository = friendshipRepository;
-    }
+    private final FriendshipRepository friendshipRepository;
+    private final FeedRepository feedRepository;
 
     private static final String FIND_ALL_QUERY = "SELECT * FROM users";
     private static final String FIND_BY_ID_QUERY = "SELECT * FROM users WHERE id = ?";
@@ -58,6 +56,11 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
         SELECT film_id FROM likes WHERE user_id = ?
     )
     """;
+    public UserRepository(JdbcTemplate jdbc, RowMapper<User> mapper, FriendshipRepository friendshipRepository, FeedRepository feedRepository) {
+        super(jdbc, mapper);
+        this.friendshipRepository = friendshipRepository;
+        this.feedRepository = feedRepository;
+    }
 
     @Override
     public List<User> findAll() {
@@ -162,4 +165,11 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
     public boolean checkId(Long id) {
         return checkId(CHECK_USER_ID, id);
     }
+
+    @Override
+    public List<FeedDTO> getFeeds(Long id) {
+        return feedRepository.getFeeds(id);
+    }
+
+    ;
 }

@@ -8,6 +8,9 @@ DROP TABLE IF EXISTS reviews CASCADE;
 DROP TABLE IF EXISTS review_likes CASCADE;
 DROP TABLE IF EXISTS director CASCADE;
 DROP TABLE IF EXISTS film_director CASCADE;
+DROP TABLE IF EXISTS feed CASCADE;
+DROP TABLE IF EXISTS event_type CASCADE;
+DROP TABLE IF EXISTS operation CASCADE;
 
 create TABLE IF NOT EXISTS users (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -34,11 +37,11 @@ create TABLE IF NOT EXISTS director (
 
 create TABLE IF NOT EXISTS films (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(100) NOT NULL,
-    description VARCHAR(200),
-    release_date DATE NOT NULL,
-    duration INT NOT NULL,
-    rating_id BIGINT,
+        name VARCHAR(100) NOT NULL,
+        description VARCHAR(200),
+        release_date DATE NOT NULL,
+        duration INT NOT NULL,
+        rating_id BIGINT,
     FOREIGN KEY (rating_id) REFERENCES rating_mpa(id)
 );
 
@@ -57,20 +60,41 @@ CREATE TABLE IF NOT EXISTS film_genre (
 );
 
 create TABLE IF NOT EXISTS likes (
-    user_id BIGINT,
-    film_id BIGINT,
+    user_id BIGINT NOT NULL,
+    film_id BIGINT NOT NULL,
     PRIMARY KEY (user_id, film_id),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (film_id) REFERENCES films(id) ON DELETE CASCADE
 );
 
 create TABLE IF NOT EXISTS friendship (
-    user_id BIGINT,
-    friend_id BIGINT,
+    user_id BIGINT NOT NULL,
+    friend_id BIGINT NOT NULL,
     PRIMARY KEY (user_id, friend_id),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (friend_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
+create TABLE IF NOT EXISTS event_type (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(50) NOT NULL
+);
+
+create TABLE IF NOT EXISTS operation (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(50) NOT NULL
+    );
+
+create TABLE IF NOT EXISTS feed (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    entity_id BIGINT NOT NULL,
+    event_id BIGINT NOT NULL,
+    operation_id BIGINT NOT NULL,
+    timestamp BIGINT NOT NULL,
+    FOREIGN KEY (event_id) REFERENCES event_type(id),
+    FOREIGN KEY (operation_id) REFERENCES operation(id)
+    );
 
 create TABLE IF NOT EXISTS reviews (
     review_id BIGINT PRIMARY KEY AUTO_INCREMENT,
