@@ -164,10 +164,17 @@ public class UserService {
         }
 
         List<User> similarUsers = userStorage.findSimilarUsers(userId);
+
+        if (similarUsers.isEmpty()) {
+            log.info("Похожих пользователей не найдено для пользователя с id={}", userId);
+            return Collections.emptyList();
+        }
+
         Long similarUserId = similarUsers.get(0).getId();
 
         return filmRepository.findRecommendationsByUser(similarUserId, userId);
     }
+
 
 
     public Collection<FeedDTO> getFeeds(Long id) {
