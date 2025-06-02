@@ -49,21 +49,6 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
         LIMIT 1;
     """;
 
-    private static final String FIND_FILMS_LIKED_BY_USER = """
-        SELECT f.id, f.name, f.description, f.release_date, f.duration, f.rating_id
-        FROM films f
-        JOIN likes l ON f.id = l.film_id
-        WHERE l.user_id = ?
-    """;
-
-    private static final String FIND_FILMS_NOT_LIKED_BY_USER = """
-        SELECT f.id, f.name, f.description, f.release_date, f.duration, f.rating_id
-        FROM films f
-        WHERE f.id NOT IN (
-            SELECT film_id FROM likes WHERE user_id = ?
-        )
-    """;
-
     @Override
     public List<User> findAll() {
         return findMany(FIND_ALL_QUERY);
@@ -147,25 +132,31 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
                 return Collections.emptyList();
             }
 
-            Collection<Film> filmsLikedBySimilarUser = jdbc.query(FIND_FILMS_LIKED_BY_USER, new FilmRowMapper(), similarUserId);
-            log.debug("Найдено фильмов, лайкнутых похожим пользователем: {}", filmsLikedBySimilarUser.size());
+            String RECOMMENDATION_QUERY = """
+            SELECT f.id, f.name, f.description, f.release_date, f.duration, f.rating_id
+            FROM films f
+            JOIN likes l_sim ON f.id = l_sim.film_id
+            WHERE l_sim.user_id = ?
+            AND f.id NOT IN (
+                SELECT film_id FROM likes WHERE user_id = ?
+            )
+            """;
 
-            Collection<Film> filmsNotLikedByUser = jdbc.query(FIND_FILMS_NOT_LIKED_BY_USER, new FilmRowMapper(), userId);
-            log.debug("Найдено фильмов, которые не лайкнул текущий пользователь: {}", filmsNotLikedByUser.size());
+            Collection<Film> recommendations = jdbc.query(RECOMMENDATION_QUERY, new FilmRowMapper(), similarUserId, userId);
 
-            filmsLikedBySimilarUser.retainAll(filmsNotLikedByUser);
-
-            if (filmsLikedBySimilarUser.isEmpty()) {
+            if (recommendations.isEmpty()) {
                 log.debug("Нет фильмов для рекомендации для пользователя с id={}", userId);
-                return Collections.emptyList();
+            } else {
+                log.debug("Найдено {} фильмов для рекомендации пользователю с id={}", recommendations.size(), userId);
             }
 
-            return filmsLikedBySimilarUser;
+            return recommendations;
         } catch (Exception e) {
             log.error("Ошибка при получении рекомендаций для пользователя с id={}", userId, e);
             return Collections.emptyList();
         }
     }
+
 
     @Override
     public boolean checkId(Long id) {
