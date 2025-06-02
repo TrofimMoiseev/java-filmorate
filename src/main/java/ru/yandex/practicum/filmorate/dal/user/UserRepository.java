@@ -56,6 +56,7 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
         SELECT film_id FROM likes WHERE user_id = ?
     )
     """;
+    
     public UserRepository(JdbcTemplate jdbc, RowMapper<User> mapper, FriendshipRepository friendshipRepository, FeedRepository feedRepository) {
         super(jdbc, mapper);
         this.friendshipRepository = friendshipRepository;
