@@ -8,6 +8,8 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.dal.BaseRepository;
+import ru.yandex.practicum.filmorate.dal.feed.FeedRepository;
+import ru.yandex.practicum.filmorate.model.Feed;
 import ru.yandex.practicum.filmorate.storage.interfaceStorage.ReviewStorage;
 import ru.yandex.practicum.filmorate.model.Review;
 import java.sql.PreparedStatement;
@@ -18,6 +20,8 @@ import java.util.Optional;
 @Slf4j
 @Repository
 public class ReviewRepository extends BaseRepository<Review> implements ReviewStorage {
+
+    private final FeedRepository feedRepository;
 
     private static final String CREATE_REVIEW = """
         INSERT INTO reviews (content, is_positive, user_id, film_id, useful)
@@ -68,8 +72,9 @@ public class ReviewRepository extends BaseRepository<Review> implements ReviewSt
         UPDATE reviews SET useful = useful - 1 WHERE review_id = ?
     """;
 
-    public ReviewRepository(JdbcTemplate jdbc, RowMapper<Review> mapper) {
+    public ReviewRepository(JdbcTemplate jdbc, RowMapper<Review> mapper, FeedRepository feedRepository) {
         super(jdbc, mapper);
+        this.feedRepository = feedRepository;
     }
 
     @Override
@@ -87,6 +92,7 @@ public class ReviewRepository extends BaseRepository<Review> implements ReviewSt
         }, keyHolder);
 
         Long id = keyHolder.getKey().longValue();
+        feedRepository.create(new Feed(review.getUserId(), id, 2L, 1L));
         return findById(id).orElseThrow();
     }
 
@@ -98,11 +104,13 @@ public class ReviewRepository extends BaseRepository<Review> implements ReviewSt
                 review.getIsPositive(),
                 review.getReviewId()
         );
+        feedRepository.create(new Feed(review.getUserId(), review.getReviewId(), 2L, 2L));
         return findById(review.getReviewId()).orElseThrow();
     }
 
     @Override
     public void delete(Review review) {
+        feedRepository.create(new Feed(review.getUserId(), review.getReviewId(), 2L, 3L));
         jdbc.update(DELETE_REVIEW, review.getReviewId());
     }
 
@@ -129,6 +137,7 @@ public class ReviewRepository extends BaseRepository<Review> implements ReviewSt
             jdbc.update(INSERT_REVIEW_RATING, reviewId, userId, true);
             jdbc.update(UPDATE_USEFUL_PLUS, reviewId);
         }
+        feedRepository.create(new Feed(userId, reviewId, 1L, 1L));
     }
 
     @Override
@@ -139,6 +148,7 @@ public class ReviewRepository extends BaseRepository<Review> implements ReviewSt
             jdbc.update(INSERT_REVIEW_RATING, reviewId, userId, false);
             jdbc.update(UPDATE_USEFUL_MINUS, reviewId);
         }
+        feedRepository.create(new Feed(userId, reviewId, 1L, 1L));
     }
 
     @Override
@@ -157,12 +167,15 @@ public class ReviewRepository extends BaseRepository<Review> implements ReviewSt
     public void deleteLike(Long reviewId, Long userId) {
         jdbc.update(DELETE_LIKE, reviewId, userId);
         jdbc.update(UPDATE_USEFUL_MINUS, reviewId);
+        feedRepository.create(new Feed(userId, reviewId, 1L, 3L));
     }
 
     @Override
     public void deleteDisLike(Long reviewId, Long userId) {
         jdbc.update(DELETE_DISLIKE, reviewId, userId);
         jdbc.update(UPDATE_USEFUL_PLUS, reviewId);
+        feedRepository.create(new Feed(userId, reviewId, 1L, 3L));
+
     }
 
     private boolean hasAlreadyRated(Long reviewId, Long userId, boolean isLike) {

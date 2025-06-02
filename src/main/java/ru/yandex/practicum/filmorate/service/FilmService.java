@@ -18,7 +18,7 @@ import java.util.Collection;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class FilmService { //логика обработки запросов
+public class FilmService {
 
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
@@ -37,9 +37,8 @@ public class FilmService { //логика обработки запросов
         return filmStorage.findAll();
     }
 
-    public Collection<Film> findPopular(int count) {
-        log.info("Обработка GET-запроса на получение популярных фильмов.");
-        return filmStorage.findPopular(count);
+    public Collection<Film> findPopular(int count, Integer genreId, Integer year) {
+        return filmStorage.findPopular(count, genreId, year);
     }
 
     public Collection<Film> findFilmsByDirectorId(Long id, String sortBy) {

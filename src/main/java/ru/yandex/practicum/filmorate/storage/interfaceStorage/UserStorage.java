@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.storage.interfaceStorage;
 
+import ru.yandex.practicum.filmorate.DTO.FeedDTO;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.Collection;
@@ -24,6 +25,8 @@ public interface UserStorage {
     void deleteFriend(Long userId, Long friendId);
 
     Collection<User> getCommonFriends(Long userId, Long friendId);
+
+    Collection<FeedDTO> getFeeds(Long id);
 
     void deleteUser(Long userId);
 

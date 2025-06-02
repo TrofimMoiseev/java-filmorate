@@ -6,7 +6,9 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.DTO.FeedDTO;
 import ru.yandex.practicum.filmorate.dal.BaseRepository;
+import ru.yandex.practicum.filmorate.dal.feed.FeedRepository;
 import ru.yandex.practicum.filmorate.dal.friendship.FriendshipRepository;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.interfaceStorage.UserStorage;
@@ -21,10 +23,12 @@ import java.util.*;
 public class UserRepository extends BaseRepository<User> implements UserStorage {
 
     FriendshipRepository friendshipRepository;
+    private final FeedRepository feedRepository;
 
-    public UserRepository(JdbcTemplate jdbc, RowMapper<User> mapper, FriendshipRepository friendshipRepository) {
+    public UserRepository(JdbcTemplate jdbc, RowMapper<User> mapper, FriendshipRepository friendshipRepository, FeedRepository feedRepository) {
         super(jdbc, mapper);
         this.friendshipRepository = friendshipRepository;
+        this.feedRepository = feedRepository;
     }
 
     private static final String FIND_ALL_QUERY = "SELECT * FROM users";
@@ -66,6 +70,11 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
     public Collection<User> getCommonFriends(Long userId, Long friendId) {
         log.debug("Запрос списка общих друзей пользователей в хранилище");
         return friendshipRepository.findCommonFriends(userId, friendId);
+    }
+
+    @Override
+    public List<FeedDTO> getFeeds(Long id) {
+        return feedRepository.getFeeds(id);
     }
 
     @Override
