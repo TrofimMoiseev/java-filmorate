@@ -53,9 +53,7 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
     JOIN likes l_sim ON f.id = l_sim.film_id
     WHERE l_sim.user_id = ?
     AND f.id NOT IN (
-        SELECT film_id FROM likes WHERE user_id = ?
-    )
-    """;
+        SELECT film_id FROM likes WHERE user_id = ?)""";
     
     public UserRepository(JdbcTemplate jdbc, RowMapper<User> mapper, FriendshipRepository friendshipRepository, FeedRepository feedRepository) {
         super(jdbc, mapper);
