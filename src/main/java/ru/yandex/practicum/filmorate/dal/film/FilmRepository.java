@@ -360,6 +360,6 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     }
 
     public List<Film> findRecommendationsByUser(Long similarUserId, Long userId) {
-        return jdbc.query(RECOMMENDATION_QUERY, new FilmRowMapper(), similarUserId, userId);
+        return findMany(RECOMMENDATION_QUERY,similarUserId,userId);
     }
 }
