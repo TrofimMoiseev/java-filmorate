@@ -22,7 +22,7 @@ import java.util.*;
 @Repository
 public class UserRepository extends BaseRepository<User> implements UserStorage {
 
-    FriendshipRepository friendshipRepository;
+    private final FriendshipRepository friendshipRepository;
     private final FeedRepository feedRepository;
 
     public UserRepository(JdbcTemplate jdbc, RowMapper<User> mapper, FriendshipRepository friendshipRepository, FeedRepository feedRepository) {
