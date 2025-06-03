@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.storage.interfaceStorage;
 
 import ru.yandex.practicum.filmorate.DTO.FeedDTO;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.Collection;
@@ -30,6 +31,8 @@ public interface UserStorage {
     Collection<FeedDTO> getFeeds(Long id);
 
     List<User> findSimilarUsers(Long userId);
+
+    List<Film> findRecommendedFilmsForUser(Long userId);
 
     void deleteUser(Long userId);
 

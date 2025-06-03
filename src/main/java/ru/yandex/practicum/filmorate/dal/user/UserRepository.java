@@ -9,7 +9,9 @@ import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.DTO.FeedDTO;
 import ru.yandex.practicum.filmorate.dal.BaseRepository;
 import ru.yandex.practicum.filmorate.dal.feed.FeedRepository;
+import ru.yandex.practicum.filmorate.dal.film.FilmRepository;
 import ru.yandex.practicum.filmorate.dal.friendship.FriendshipRepository;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.interfaceStorage.UserStorage;
 
@@ -24,11 +26,13 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
 
     FriendshipRepository friendshipRepository;
     private final FeedRepository feedRepository;
+    private final FilmRepository filmRepository;
 
-    public UserRepository(JdbcTemplate jdbc, RowMapper<User> mapper, FriendshipRepository friendshipRepository, FeedRepository feedRepository) {
+    public UserRepository(JdbcTemplate jdbc, RowMapper<User> mapper, FriendshipRepository friendshipRepository, FeedRepository feedRepository, FilmRepository filmRepository) {
         super(jdbc, mapper);
         this.friendshipRepository = friendshipRepository;
         this.feedRepository = feedRepository;
+        this.filmRepository = filmRepository;
     }
 
     private static final String FIND_ALL_QUERY = "SELECT * FROM users";
@@ -135,5 +139,18 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
     public boolean checkId(Long id) {
         Integer count = jdbc.queryForObject(CHECK_USER_ID, Integer.class, id);
         return count != null && count > 0;
+    }
+
+    public List<Film> findRecommendedFilmsForUser(Long userId) {
+        List<User> similarUsers = findSimilarUsers(userId);
+
+        if (similarUsers.isEmpty()) {
+            log.info("Похожих пользователей не найдено для пользователя с id={}", userId);
+            return Collections.emptyList();
+        }
+
+        Long similarUserId = similarUsers.get(0).getId();
+
+        return filmRepository.findRecommendationsByUser(similarUserId, userId);
     }
 }

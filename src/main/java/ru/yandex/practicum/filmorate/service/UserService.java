@@ -162,20 +162,8 @@ public class UserService {
             log.warn("Пользователь с id={} не найден", userId);
             throw new NotFoundException("Пользователь с id=" + userId + " не найден");
         }
-
-        List<User> similarUsers = userStorage.findSimilarUsers(userId);
-
-        if (similarUsers.isEmpty()) {
-            log.info("Похожих пользователей не найдено для пользователя с id={}", userId);
-            return Collections.emptyList();
-        }
-
-        Long similarUserId = similarUsers.get(0).getId();
-
-        return filmRepository.findRecommendationsByUser(similarUserId, userId);
+        return userStorage.findRecommendedFilmsForUser(userId);
     }
-
-
 
     public Collection<FeedDTO> getFeeds(Long id) {
         if (!userStorage.checkId(id)) {
