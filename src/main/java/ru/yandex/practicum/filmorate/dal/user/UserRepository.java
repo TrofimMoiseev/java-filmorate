@@ -104,9 +104,9 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
                 user.getEmail(), user.getLogin(), user.getName(), Date.valueOf(user.getBirthday()), user.getId());
 
         update(UPDATE_QUERY,
+                user.getEmail(),
                 user.getLogin(),
                 user.getName(),
-                user.getEmail(),
                 Date.valueOf(user.getBirthday()),
                 user.getId());
         log.debug("Пользователь ({}) обновлен в базе данных", user.getId());

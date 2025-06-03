@@ -90,7 +90,13 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
 
     @Override
     public List<Film> findAll() {
-        return findMany(FIND_ALL_QUERY);
+        List<Film> films = findMany(FIND_ALL_QUERY);
+
+        for (Film film : films) {
+            setGenreAndRatingToFilm(film);
+            setDirectorsToFilm(film);
+        }
+        return films;
     }
 
     @Override
