@@ -20,9 +20,9 @@ public class LikeRepository extends BaseRepository<Like> {
 
     private final FeedRepository feedRepository;
 
+    private static final String FIND_LIKE_FROM_USER_QUERY = "SELECT * from likes WHERE user_id = ? AND film_id = ?";
     private static final String INSERT_QUERY = "INSERT INTO likes(user_id, film_id) VALUES (?, ?)";
     private static final String DELETE_QUERY = "DELETE FROM likes WHERE user_id = ? AND film_id = ?";
-
     private static final String FIND_USERS_COMMON_FILMS_QUERY = """
             SELECT f.id, f.name, f.description, f.release_date, f.duration, f.rating_id
             FROM ((SELECT l.FILM_ID
@@ -41,7 +41,9 @@ public class LikeRepository extends BaseRepository<Like> {
     public void putLike(Long userId, Long filmId) {
         log.debug("Запрос лайка от пользователя (Id: {}) на фильм (Id: {})", userId, filmId);
         feedRepository.create(new Feed(userId, filmId, 1L, 1L));
-        jdbc.update(INSERT_QUERY, userId, filmId);
+        if (findMany(FIND_LIKE_FROM_USER_QUERY, userId, filmId).isEmpty()) {
+            jdbc.update(INSERT_QUERY, userId, filmId);
+        }
     }
 
     public void deleteLike(Long userId, Long filmId) {

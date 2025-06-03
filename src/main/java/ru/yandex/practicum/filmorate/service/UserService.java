@@ -139,6 +139,21 @@ public class UserService {
         userStorage.deleteUser(userId);
     }
 
+    public Collection<Film> getRecommendations(Long userId) {
+        if (!userStorage.checkId(userId)) {
+            log.warn("Пользователь с id={} не найден", userId);
+            throw new NotFoundException("Пользователь с id=" + userId + " не найден");
+        }
+        return userStorage.findRecommendedFilmsForUser(userId);
+    }
+
+    public Collection<FeedDTO> getFeeds(Long id) {
+        if (!userStorage.checkId(id)) {
+            throw new NotFoundException("Пользователь с id = " + id + " не найден");
+        }
+        return userStorage.getFeeds(id);
+    }
+
     private void check(User newUser) {
         if (newUser.getEmail() == null || newUser.getEmail().isBlank() || !newUser.getEmail().contains("@")) {
             log.warn("Валидация не пройдена — некорректный email: {}", newUser.getEmail());
@@ -153,20 +168,5 @@ public class UserService {
             log.warn("Валидация не пройдена — дата рождения в будущем: {}", newUser.getBirthday());
             throw new ValidationException("Дата рождения указана неверно");
         }
-    }
-
-    public Collection<Film> getRecommendations(Long userId) {
-        if (!userStorage.checkId(userId)) {
-            log.warn("Пользователь с id={} не найден", userId);
-            throw new NotFoundException("Пользователь с id=" + userId + " не найден");
-        }
-        return userStorage.findRecommendedFilmsForUser(userId);
-    }
-
-    public Collection<FeedDTO> getFeeds(Long id) {
-        if (!userStorage.checkId(id)) {
-            throw new NotFoundException("Пользователь с id = " + id + " не найден");
-        }
-        return userStorage.getFeeds(id);
     }
 }

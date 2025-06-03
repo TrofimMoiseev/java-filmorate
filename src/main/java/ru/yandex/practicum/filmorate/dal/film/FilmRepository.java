@@ -277,10 +277,8 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
         }
 
         Collection<Film> films = findMany(sql, id);
-        for (Film film : films) {
-            setGenreAndRatingToFilm(film);
-            setDirectorsToFilm(film);
-        }
+        films.forEach(this::setGenreAndRatingToFilm);
+        films.forEach(this::setDirectorsToFilm);
 
         return films;
     }
@@ -309,10 +307,8 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
         sql += " GROUP BY f.id ORDER BY COUNT(distinct l.user_id) DESC";
 
         Collection<Film> films = findMany(sql, params.toArray());
-        for (Film film : films) {
-            setGenreAndRatingToFilm(film);
-            setDirectorsToFilm(film);
-        }
+        films.forEach(this::setGenreAndRatingToFilm);
+        films.forEach(this::setDirectorsToFilm);
 
         return films;
     }
@@ -326,7 +322,7 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     public Collection<Film> findCommonFilms(Long userId, Long friendId) {
         Collection<Film> commonFilms = likeRepository.findUsersCommonFilms(userId, friendId);
         commonFilms.forEach(this::setGenreAndRatingToFilm);
-
+        commonFilms.forEach(this::setDirectorsToFilm);
         return commonFilms;
     }
 
@@ -334,6 +330,13 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     public void deleteFilm(Long filmId) {
         log.info("Обработка DELETE-запрос на удаление фильма в хранилище");
         delete(DELETE_QUERY, filmId);
+    }
+
+    public List<Film> findRecommendationsByUser(Long similarUserId, Long userId) {
+        List<Film> films = findMany(RECOMMENDATION_QUERY,similarUserId,userId);
+        films.forEach(this::setGenreAndRatingToFilm);
+        films.forEach(this::setDirectorsToFilm);
+        return films;
     }
 
     private void setGenreAndRatingToFilm(Film film) {
@@ -363,9 +366,5 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
         }, film.getId()));
 
         film.setDirectors(directors);
-    }
-
-    public List<Film> findRecommendationsByUser(Long similarUserId, Long userId) {
-        return findMany(RECOMMENDATION_QUERY,similarUserId,userId);
     }
 }
