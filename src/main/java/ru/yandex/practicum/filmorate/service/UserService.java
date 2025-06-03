@@ -22,7 +22,6 @@ import java.util.*;
 public class UserService {
 
     private final UserStorage userStorage;
-    private final FilmRepository filmRepository;
 
     public User findUserById(Long id) {
         log.info("Обработка GET-запроса на получение пользователя по id.");
