@@ -137,8 +137,7 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
 
     @Override
     public boolean checkId(Long id) {
-        Integer count = jdbc.queryForObject(CHECK_USER_ID, Integer.class, id);
-        return count != null && count > 0;
+        return checkId(CHECK_USER_ID, id);
     }
 
     public List<Film> findRecommendedFilmsForUser(Long userId) {
