@@ -10,10 +10,7 @@ import ru.yandex.practicum.filmorate.dal.BaseRepository;
 import ru.yandex.practicum.filmorate.dal.like.LikeRepository;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
-import ru.yandex.practicum.filmorate.model.Director;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.model.*;
 import ru.yandex.practicum.filmorate.storage.interfaceStorage.FilmStorage;
 
 import java.sql.Date;
@@ -60,6 +57,16 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
             LEFT JOIN director d ON fd.director_id = d.id
             LEFT JOIN likes l ON f.id = l.film_id
             """;
+
+    private static final String RECOMMENDATION_QUERY = """
+        SELECT f.id, f.name, f.description, f.release_date, f.duration, f.rating_id
+        FROM films f
+        JOIN likes l_sim ON f.id = l_sim.film_id
+        WHERE l_sim.user_id = ?
+        AND f.id NOT IN (
+            SELECT film_id FROM likes WHERE user_id = ?
+        )
+    """;
     private static final String DELETE_QUERY = "DELETE FROM films WHERE id = ?";
 
     private static final String FIND_POPULAR = """
@@ -350,5 +357,9 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
         }, film.getId()));
 
         film.setDirectors(directors);
+    }
+
+    public List<Film> findRecommendationsByUser(Long similarUserId, Long userId) {
+        return findMany(RECOMMENDATION_QUERY,similarUserId,userId);
     }
 }

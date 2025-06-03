@@ -8,11 +8,12 @@ import ru.yandex.practicum.filmorate.DTO.FeedDTO;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.interfaceStorage.UserStorage;
 
 import java.time.LocalDate;
-import java.util.Collection;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -66,13 +67,6 @@ public class UserService {
         }
 
         return userStorage.create(user);
-    }
-
-    public Collection<FeedDTO> getFeeds(Long id) {
-        if (!userStorage.checkId(id)) {
-            throw new NotFoundException("Пользователь с id = " + id + " не найден");
-        }
-        return userStorage.getFeeds(id);
     }
 
     public User update(User newUser) {
@@ -159,5 +153,20 @@ public class UserService {
             log.warn("Валидация не пройдена — дата рождения в будущем: {}", newUser.getBirthday());
             throw new ValidationException("Дата рождения указана неверно");
         }
+    }
+
+    public Collection<Film> getRecommendations(Long userId) {
+        if (!userStorage.checkId(userId)) {
+            log.warn("Пользователь с id={} не найден", userId);
+            throw new NotFoundException("Пользователь с id=" + userId + " не найден");
+        }
+        return userStorage.findRecommendedFilmsForUser(userId);
+    }
+
+    public Collection<FeedDTO> getFeeds(Long id) {
+        if (!userStorage.checkId(id)) {
+            throw new NotFoundException("Пользователь с id = " + id + " не найден");
+        }
+        return userStorage.getFeeds(id);
     }
 }

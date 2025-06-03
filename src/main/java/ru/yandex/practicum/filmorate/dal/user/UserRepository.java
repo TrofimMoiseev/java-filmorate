@@ -9,17 +9,16 @@ import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.DTO.FeedDTO;
 import ru.yandex.practicum.filmorate.dal.BaseRepository;
 import ru.yandex.practicum.filmorate.dal.feed.FeedRepository;
+import ru.yandex.practicum.filmorate.dal.film.FilmRepository;
 import ru.yandex.practicum.filmorate.dal.friendship.FriendshipRepository;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.interfaceStorage.UserStorage;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @Slf4j
 @Repository
@@ -27,6 +26,14 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
 
     private final FriendshipRepository friendshipRepository;
     private final FeedRepository feedRepository;
+    private final FilmRepository filmRepository;
+
+    public UserRepository(JdbcTemplate jdbc, RowMapper<User> mapper, FriendshipRepository friendshipRepository, FeedRepository feedRepository, FilmRepository filmRepository) {
+        super(jdbc, mapper);
+        this.friendshipRepository = friendshipRepository;
+        this.feedRepository = feedRepository;
+        this.filmRepository = filmRepository;
+    }
 
     private static final String FIND_ALL_QUERY = "SELECT * FROM users";
     private static final String FIND_BY_ID_QUERY = "SELECT * FROM users WHERE id = ?";
@@ -36,11 +43,17 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
     private static final String UPDATE_QUERY = "UPDATE users SET email = ?, login = ?, name = ?, birthday = ? WHERE id = ?";
     private static final String DELETE_QUERY = "DELETE FROM users WHERE id = ?";
 
-    public UserRepository(JdbcTemplate jdbc, RowMapper<User> mapper, FriendshipRepository friendshipRepository, FeedRepository feedRepository) {
-        super(jdbc, mapper);
-        this.friendshipRepository = friendshipRepository;
-        this.feedRepository = feedRepository;
-    }
+    private static final String FIND_COMMON_LIKES_USERS = """
+        SELECT u.*
+        FROM likes l1
+        JOIN likes l2 ON l1.film_id = l2.film_id
+        JOIN users u ON l2.user_id = u.id
+        WHERE l1.user_id = ?
+        AND u.id != ?
+        GROUP BY u.id
+        ORDER BY COUNT(*) DESC
+        LIMIT 1
+    """;
 
     @Override
     public List<User> findAll() {
@@ -61,6 +74,11 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
     public Collection<User> getCommonFriends(Long userId, Long friendId) {
         log.debug("Запрос списка общих друзей пользователей в хранилище");
         return friendshipRepository.findCommonFriends(userId, friendId);
+    }
+
+    @Override
+    public List<FeedDTO> getFeeds(Long id) {
+        return feedRepository.getFeeds(id);
     }
 
     @Override
@@ -113,15 +131,25 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
         delete(DELETE_QUERY, userId);
     }
 
+    public List<User> findSimilarUsers(Long userId) {
+        return findMany(FIND_COMMON_LIKES_USERS, userId, userId);
+    }
+
     @Override
     public boolean checkId(Long id) {
         return checkId(CHECK_USER_ID, id);
     }
 
-    @Override
-    public List<FeedDTO> getFeeds(Long id) {
-        return feedRepository.getFeeds(id);
-    }
+    public List<Film> findRecommendedFilmsForUser(Long userId) {
+        List<User> similarUsers = findSimilarUsers(userId);
 
-    ;
+        if (similarUsers.isEmpty()) {
+            log.info("Похожих пользователей не найдено для пользователя с id={}", userId);
+            return Collections.emptyList();
+        }
+
+        Long similarUserId = similarUsers.get(0).getId();
+
+        return filmRepository.findRecommendationsByUser(similarUserId, userId);
+    }
 }
