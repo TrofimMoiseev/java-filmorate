@@ -38,7 +38,7 @@ public class ReviewRepository extends BaseRepository<Review> implements ReviewSt
 
     private static final String FIND_ALL = """
         SELECT * FROM reviews
-        WHERE (? IS NULL OR film_id = ?)
+        WHERE (?=0 OR film_id = ?)
         ORDER BY useful DESC
         LIMIT ?
     """;

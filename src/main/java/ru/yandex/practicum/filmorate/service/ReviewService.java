@@ -89,12 +89,20 @@
         private void validateReview(Review review) {
             Long userId = review.getUserId();
             Long filmId = review.getFilmId();
+            Boolean isPositive = review.getIsPositive();
+            String content = review.getContent();
 
             if (userId == null) {
                 throw new ValidationException("Пользователь не указан (userId=null)");
             }
             if (filmId == null) {
                 throw new ValidationException("Фильм не указан (filmId=null)");
+            }
+            if (isPositive == null) {
+                throw new ValidationException("Тип отзыва не указан (isPositive=null)");
+            }
+            if (content.isEmpty()) {
+                throw new ValidationException("Содержание отзыва не указано (content=null)");
             }
 
             if (!userStorage.checkId(userId)) {
