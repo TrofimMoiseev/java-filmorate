@@ -92,7 +92,9 @@ public class ReviewRepository extends BaseRepository<Review> implements ReviewSt
         }, keyHolder);
 
         Long id = keyHolder.getKey().longValue();
-        feedRepository.create(new Feed(review.getUserId(), id, 2L, 1L));
+        Review newRewiew = findById(id).orElseThrow();
+        log.info("Пользователь ({}) оставил отзыв, добавление в базу данных: добавление отзыва ({})", review.getUserId(), id);
+        feedRepository.create(new Feed(newRewiew.getUserId(), newRewiew.getReviewId(), 2L, 1L));
         return findById(id).orElseThrow();
     }
 
@@ -104,14 +106,17 @@ public class ReviewRepository extends BaseRepository<Review> implements ReviewSt
                 review.getIsPositive(),
                 review.getReviewId()
         );
-        feedRepository.create(new Feed(review.getUserId(), review.getReviewId(), 2L, 2L));
-        return findById(review.getReviewId()).orElseThrow();
+        Review newRewiew = findById(review.getReviewId()).orElseThrow();
+        log.info("Пользователь ({}) обновил отзыв, добавление в базу данных: добавление отзыва ({})", review.getUserId(), review.getReviewId());
+        feedRepository.create(new Feed(newRewiew.getUserId(), newRewiew.getReviewId(), 2L, 2L));
+        return newRewiew;
     }
 
     @Override
-    public void delete(Review review) {
-        feedRepository.create(new Feed(review.getUserId(), review.getReviewId(), 2L, 3L));
-        jdbc.update(DELETE_REVIEW, review.getReviewId());
+    public void delete(Long id) {
+        Review newRewiew = findById(id).orElseThrow();
+        feedRepository.create(new Feed(newRewiew.getUserId(), newRewiew.getReviewId(), 2L, 3L));
+        jdbc.update(DELETE_REVIEW, id);
     }
 
     @Override
@@ -137,7 +142,6 @@ public class ReviewRepository extends BaseRepository<Review> implements ReviewSt
             jdbc.update(INSERT_REVIEW_RATING, reviewId, userId, true);
             jdbc.update(UPDATE_USEFUL_PLUS, reviewId);
         }
-        feedRepository.create(new Feed(userId, reviewId, 1L, 1L));
     }
 
     @Override
@@ -148,7 +152,6 @@ public class ReviewRepository extends BaseRepository<Review> implements ReviewSt
             jdbc.update(INSERT_REVIEW_RATING, reviewId, userId, false);
             jdbc.update(UPDATE_USEFUL_MINUS, reviewId);
         }
-        feedRepository.create(new Feed(userId, reviewId, 1L, 1L));
     }
 
     @Override
@@ -167,15 +170,12 @@ public class ReviewRepository extends BaseRepository<Review> implements ReviewSt
     public void deleteLike(Long reviewId, Long userId) {
         jdbc.update(DELETE_LIKE, reviewId, userId);
         jdbc.update(UPDATE_USEFUL_MINUS, reviewId);
-        feedRepository.create(new Feed(userId, reviewId, 1L, 3L));
     }
 
     @Override
     public void deleteDisLike(Long reviewId, Long userId) {
         jdbc.update(DELETE_DISLIKE, reviewId, userId);
         jdbc.update(UPDATE_USEFUL_PLUS, reviewId);
-        feedRepository.create(new Feed(userId, reviewId, 1L, 3L));
-
     }
 
     private boolean hasAlreadyRated(Long reviewId, Long userId, boolean isLike) {

@@ -10,7 +10,7 @@ public interface ReviewStorage {
 
     Review update(Review review);
 
-    void delete(Review review);
+    void delete(Long id);
 
     List<Review> findAll(Long filmId, int count);
 

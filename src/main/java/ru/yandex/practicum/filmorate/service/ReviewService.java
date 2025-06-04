@@ -28,17 +28,12 @@
         }
 
         public Review update(Review review) {
-            Optional<Review> existing = reviewStorage.findById(review.getReviewId());
-            if (existing.isEmpty()) {
-                throw new ValidationException("Отзыв с id=" + review.getReviewId() + " не найден");
-            }
+            validateReview(review);
             return reviewStorage.update(review);
         }
 
         public void delete(Long id) {
-            Review review = reviewStorage.findById(id)
-                    .orElseThrow(() -> new ValidationException("Отзыв с id=" + id + " не найден"));
-            reviewStorage.delete(review);
+            reviewStorage.delete(id);
         }
 
         public Review findById(Long id) {
@@ -87,30 +82,25 @@
         }
 
         private void validateReview(Review review) {
-            Long userId = review.getUserId();
-            Long filmId = review.getFilmId();
-            Boolean isPositive = review.getIsPositive();
-            String content = review.getContent();
-
-            if (userId == null) {
+            if (review.getUserId() == null) {
                 throw new ValidationException("Пользователь не указан (userId=null)");
             }
-            if (filmId == null) {
+            if (review.getFilmId() == null) {
                 throw new ValidationException("Фильм не указан (filmId=null)");
             }
-            if (isPositive == null) {
+            if (review.getIsPositive() == null) {
                 throw new ValidationException("Тип отзыва не указан (isPositive=null)");
             }
-            if (content.isEmpty()) {
+            if (review.getContent() == null || review.getContent().isBlank()) {
                 throw new ValidationException("Содержание отзыва не указано (content=null)");
             }
 
-            if (!userStorage.checkId(userId)) {
-                throw new NotFoundException("Пользователь с id=" + userId + " не существует");
+            if (!userStorage.checkId(review.getUserId())) {
+                throw new NotFoundException("Пользователь с id=" + review.getUserId() + " не существует");
             }
 
-            if (!filmStorage.checkId(filmId)) {
-                throw new NotFoundException("Фильм с id=" + filmId + " не существует");
+            if (!filmStorage.checkId(review.getFilmId())) {
+                throw new NotFoundException("Фильм с id=" + review.getFilmId() + " не существует");
             }
         }
 

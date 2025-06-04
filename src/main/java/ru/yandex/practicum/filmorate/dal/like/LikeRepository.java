@@ -40,10 +40,10 @@ public class LikeRepository extends BaseRepository<Like> {
 
     public void putLike(Long userId, Long filmId) {
         log.debug("Запрос лайка от пользователя (Id: {}) на фильм (Id: {})", userId, filmId);
-        feedRepository.create(new Feed(userId, filmId, 1L, 1L));
         if (findMany(FIND_LIKE_FROM_USER_QUERY, userId, filmId).isEmpty()) {
             jdbc.update(INSERT_QUERY, userId, filmId);
         }
+        feedRepository.create(new Feed(userId, filmId, 1L, 1L));
     }
 
     public void deleteLike(Long userId, Long filmId) {
