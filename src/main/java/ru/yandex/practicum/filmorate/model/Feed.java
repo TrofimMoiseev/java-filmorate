@@ -5,18 +5,20 @@ import lombok.*;
 import java.time.Instant;
 
 @Data
+@NoArgsConstructor
 public class Feed {
+    private Long eventId;
     private Long userId;
     private Long entityId;
-    private Long eventId;
-    private Long operationId;
+    private EventType eventType;
+    private Operation operation;
     private Long timestamp;
 
-    public Feed(Long userId, Long entityId, Long eventId, Long operationId) {
+    public Feed(Long userId, Long entityId, EventType eventType, Operation operation) {
         this.userId = userId;
         this.entityId = entityId;
-        this.eventId = eventId;
-        this.operationId = operationId;
+        this.eventType = eventType;
+        this.operation = operation;
         this.timestamp = Instant.now().toEpochMilli();
     }
 }

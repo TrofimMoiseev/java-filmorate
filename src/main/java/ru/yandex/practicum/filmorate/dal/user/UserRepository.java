@@ -6,14 +6,14 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
-import ru.yandex.practicum.filmorate.DTO.FeedDTO;
 import ru.yandex.practicum.filmorate.dal.BaseRepository;
 import ru.yandex.practicum.filmorate.dal.feed.FeedRepository;
 import ru.yandex.practicum.filmorate.dal.film.FilmRepository;
 import ru.yandex.practicum.filmorate.dal.friendship.FriendshipRepository;
+import ru.yandex.practicum.filmorate.model.Feed;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.interfaceStorage.UserStorage;
+import ru.yandex.practicum.filmorate.storage.interfacestorage.UserStorage;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -52,7 +52,7 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
         AND u.id != ?
         GROUP BY u.id
         ORDER BY COUNT(*) DESC
-        LIMIT 1
+        LIMIT 10
     """;
 
     @Override
@@ -77,7 +77,7 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
     }
 
     @Override
-    public List<FeedDTO> getFeeds(Long id) {
+    public List<Feed> getFeeds(Long id) {
         return feedRepository.getFeeds(id);
     }
 

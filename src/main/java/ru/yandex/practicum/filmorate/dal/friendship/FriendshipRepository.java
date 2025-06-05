@@ -7,7 +7,6 @@ import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.dal.BaseRepository;
 import ru.yandex.practicum.filmorate.dal.feed.FeedRepository;
 import ru.yandex.practicum.filmorate.dal.user.UserRowMapper;
-import ru.yandex.practicum.filmorate.model.Feed;
 import ru.yandex.practicum.filmorate.model.Friendship;
 import ru.yandex.practicum.filmorate.model.User;
 
@@ -17,8 +16,6 @@ import java.util.List;
 @Slf4j
 @Repository
 public class FriendshipRepository extends BaseRepository<Friendship> {
-
-    private final FeedRepository feedRepository;
 
     private static final String FIND_FRIENDS_BY_USER_QUERY = "SELECT u.* FROM users u JOIN friendship f ON u.id = f.friend_id WHERE f.user_id = ?";
     private static final String INSERT_QUERY_FOR_ADD_FRIEND = "INSERT INTO friendship (user_id, friend_id) VALUES (?, ?)";
@@ -33,7 +30,6 @@ public class FriendshipRepository extends BaseRepository<Friendship> {
 
     public FriendshipRepository(JdbcTemplate jdbc, RowMapper<Friendship> mapper, FeedRepository feedRepository) {
         super(jdbc, mapper);
-        this.feedRepository = feedRepository;
     }
 
     public List<User> findFriendsByUserId(Long userId) {
@@ -44,14 +40,12 @@ public class FriendshipRepository extends BaseRepository<Friendship> {
     public void putFriend(Long userId, Long friendId) {
         log.debug("Добавляем в друзья {} и {}", userId, friendId);
         update(INSERT_QUERY_FOR_ADD_FRIEND, userId, friendId);
-        feedRepository.create(new Feed(userId, friendId, 3L, 1L));
 
     }
 
     public void deleteFriend(Long userId, Long friendId) {
         log.debug("Запрос удаления пользователя (Id: {}) из списка друзей пользователя (Id: {})", friendId, userId);
         delete(DELETE_QUERY, userId, friendId);
-        feedRepository.create(new Feed(userId, friendId, 3L, 3L));
     }
 
     public Collection<User> findCommonFriends(Long userId, Long friendId) {

@@ -1,6 +1,6 @@
-package ru.yandex.practicum.filmorate.storage.interfaceStorage;
+package ru.yandex.practicum.filmorate.storage.interfacestorage;
 
-import ru.yandex.practicum.filmorate.DTO.FeedDTO;
+import ru.yandex.practicum.filmorate.model.Feed;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 
@@ -28,7 +28,7 @@ public interface UserStorage {
 
     Collection<User> getCommonFriends(Long userId, Long friendId);
 
-    Collection<FeedDTO> getFeeds(Long id);
+    List<Feed> getFeeds(Long id);
 
     List<User> findSimilarUsers(Long userId);
 

@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.storage.interfaceStorage;
+package ru.yandex.practicum.filmorate.storage.interfacestorage;
 
 import ru.yandex.practicum.filmorate.model.Director;
 
@@ -17,6 +17,4 @@ public interface DirectorStorage {
     boolean checkId(Long id);
 
     void deleteDirector(Long id);
-
-    void deleteDirectorFromFilm(Long directorId, Long filmId);
 }

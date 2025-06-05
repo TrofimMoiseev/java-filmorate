@@ -8,7 +8,6 @@ import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.dal.BaseRepository;
 import ru.yandex.practicum.filmorate.dal.feed.FeedRepository;
 import ru.yandex.practicum.filmorate.dal.film.FilmRowMapper;
-import ru.yandex.practicum.filmorate.model.Feed;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Like;
 
@@ -18,24 +17,16 @@ import java.util.Collection;
 @Repository
 public class LikeRepository extends BaseRepository<Like> {
 
-    private final FeedRepository feedRepository;
-
-    private static final String FIND_LIKE_FROM_USER_QUERY = "SELECT * from likes WHERE user_id = ? AND film_id = ?";
+    private static final String FIND_LIKE_FROM_USER_QUERY = "SELECT * FROM likes WHERE user_id = ? AND film_id = ?";
     private static final String INSERT_QUERY = "INSERT INTO likes(user_id, film_id) VALUES (?, ?)";
     private static final String DELETE_QUERY = "DELETE FROM likes WHERE user_id = ? AND film_id = ?";
-    private static final String FIND_USERS_COMMON_FILMS_QUERY = """
-            SELECT f.id, f.name, f.description, f.release_date, f.duration, f.rating_id
-            FROM ((SELECT l.FILM_ID
-            	   FROM likes l
-            	   WHERE l.USER_ID = ?) ul1
-            	   JOIN (SELECT l.FILM_ID
-            	         FROM likes l
-            			 WHERE l.USER_ID = ?) ul2 ON ul1.FILM_ID  = ul2.FILM_ID) lf
-            LEFT JOIN films f ON f.ID = lf.FILM_ID""";
+    private static final String FIND_USERS_COMMON_FILMS_QUERY = "SELECT * FROM films f" +
+            "    JOIN likes lu on (lu.film_id = f.id)" +
+            "    JOIN likes lf on (lf.film_id = f.id)" +
+            " WHERE  lu.user_id = ? AND  lf.user_id = ?";
 
     public LikeRepository(JdbcTemplate jdbc, RowMapper<Like> mapper, FeedRepository feedRepository) {
         super(jdbc, mapper);
-        this.feedRepository = feedRepository;
     }
 
     public void putLike(Long userId, Long filmId) {
@@ -43,12 +34,10 @@ public class LikeRepository extends BaseRepository<Like> {
         if (findMany(FIND_LIKE_FROM_USER_QUERY, userId, filmId).isEmpty()) {
             jdbc.update(INSERT_QUERY, userId, filmId);
         }
-        feedRepository.create(new Feed(userId, filmId, 1L, 1L));
     }
 
     public void deleteLike(Long userId, Long filmId) {
         log.debug("Запрос удаления лайка пользователя (Id: {}) с фильма (Id: {})", userId, filmId);
-        feedRepository.create(new Feed(userId, filmId, 1L, 3L));
         jdbc.update(DELETE_QUERY, userId, filmId);
     }
 

@@ -11,7 +11,7 @@ import ru.yandex.practicum.filmorate.dal.like.LikeRepository;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.*;
-import ru.yandex.practicum.filmorate.storage.interfaceStorage.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.interfacestorage.FilmStorage;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;

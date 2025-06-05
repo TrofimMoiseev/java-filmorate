@@ -9,8 +9,6 @@ DROP TABLE IF EXISTS review_likes CASCADE;
 DROP TABLE IF EXISTS director CASCADE;
 DROP TABLE IF EXISTS film_director CASCADE;
 DROP TABLE IF EXISTS feed CASCADE;
-DROP TABLE IF EXISTS event_type CASCADE;
-DROP TABLE IF EXISTS operation CASCADE;
 
 create TABLE IF NOT EXISTS users (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -75,25 +73,13 @@ create TABLE IF NOT EXISTS friendship (
     FOREIGN KEY (friend_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-create TABLE IF NOT EXISTS event_type (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(50) NOT NULL
-);
-
-create TABLE IF NOT EXISTS operation (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(50) NOT NULL
-    );
-
 create TABLE IF NOT EXISTS feed (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     user_id BIGINT NOT NULL,
     entity_id BIGINT NOT NULL,
-    event_id BIGINT NOT NULL,
-    operation_id BIGINT NOT NULL,
-    timestamp BIGINT NOT NULL,
-    FOREIGN KEY (event_id) REFERENCES event_type(id),
-    FOREIGN KEY (operation_id) REFERENCES operation(id)
+    event_type varchar(6) NOT NULL,
+    operation varchar(6) NOT NULL,
+    timestamp BIGINT NOT NULL
     );
 
 create TABLE IF NOT EXISTS reviews (

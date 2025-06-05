@@ -7,7 +7,7 @@ import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Director;
-import ru.yandex.practicum.filmorate.storage.interfaceStorage.DirectorStorage;
+import ru.yandex.practicum.filmorate.storage.interfacestorage.DirectorStorage;
 
 import java.util.Collection;
 

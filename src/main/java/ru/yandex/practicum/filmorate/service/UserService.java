@@ -4,13 +4,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import ru.yandex.practicum.filmorate.DTO.FeedDTO;
+import ru.yandex.practicum.filmorate.dal.feed.FeedRepository;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.interfaceStorage.UserStorage;
+import ru.yandex.practicum.filmorate.model.*;
+import ru.yandex.practicum.filmorate.storage.interfacestorage.UserStorage;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -21,6 +20,7 @@ import java.util.*;
 public class UserService {
 
     private final UserStorage userStorage;
+    private final FeedRepository feedRepository;
 
     public User findUserById(Long id) {
         log.info("Обработка GET-запроса на получение пользователя по id.");
@@ -114,6 +114,7 @@ public class UserService {
             throw new NotFoundException("Пользователь с id = " + friendId + " не найден");
         }
 
+        feedRepository.create(new Feed(userId, friendId, EventType.FRIEND, Operation.ADD));
         userStorage.putFriend(userId, friendId);
         log.info("Пользователь с ID = {} добавил в друзья пользователя с ID = {}", userId, friendId);
     }
@@ -127,6 +128,7 @@ public class UserService {
             throw new NotFoundException("Пользователь с id = " + friendId + " не найден");
         }
 
+        feedRepository.create(new Feed(userId, friendId, EventType.FRIEND, Operation.REMOVE));
         userStorage.deleteFriend(userId, friendId);
         log.info("Пользователь с ID = {} удалил из друзей пользователя с ID = {}", userId, friendId);
     }
@@ -147,7 +149,7 @@ public class UserService {
         return userStorage.findRecommendedFilmsForUser(userId);
     }
 
-    public Collection<FeedDTO> getFeeds(Long id) {
+    public Collection<Feed> getFeeds(Long id) {
         if (!userStorage.checkId(id)) {
             throw new NotFoundException("Пользователь с id = " + id + " не найден");
         }

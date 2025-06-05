@@ -2,14 +2,18 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dal.feed.FeedRepository;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.EventType;
+import ru.yandex.practicum.filmorate.model.Feed;
 import ru.yandex.practicum.filmorate.model.Film;
 import lombok.extern.slf4j.Slf4j;
-import ru.yandex.practicum.filmorate.storage.interfaceStorage.DirectorStorage;
-import ru.yandex.practicum.filmorate.storage.interfaceStorage.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.interfaceStorage.UserStorage;
+import ru.yandex.practicum.filmorate.model.Operation;
+import ru.yandex.practicum.filmorate.storage.interfacestorage.DirectorStorage;
+import ru.yandex.practicum.filmorate.storage.interfacestorage.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.interfacestorage.UserStorage;
 
 import java.time.LocalDate;
 import java.time.Month;
@@ -24,6 +28,7 @@ public class FilmService {
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
     private final DirectorStorage directorStorage;
+    private final FeedRepository feedRepository;
 
     public Film findFilmById(Long id) {
         log.info("Обработка GET-запроса на получение фильма по айди.");
@@ -113,6 +118,7 @@ public class FilmService {
             throw new NotFoundException("Пользователь с id = " + userId + " не найден");
         }
 
+        feedRepository.create(new Feed(userId, filmId, EventType.LIKE, Operation.ADD));
         log.info("Лайк поставлен фильму с id {}.", filmId);
         filmStorage.putLike(userId, filmId);
     }
@@ -127,12 +133,21 @@ public class FilmService {
             log.warn("Пользователь с id = {}, не найден", userId);
             throw new NotFoundException("Пользователь с id = " + userId + " не найден");
         }
-
+        feedRepository.create(new Feed(userId, filmId, EventType.LIKE, Operation.REMOVE));
         log.info("Лайк фильму с id {}, удален.", filmId);
         filmStorage.deleteLike(userId, filmId);
     }
 
     public Collection<Film> findCommonFilms(Long userId, Long friendId) {
+        if (!userStorage.checkId(userId)) {
+            log.warn("Пользователь с id = {}, не найден", userId);
+            throw new NotFoundException("Пользователь с id = " + userId + " не найден");
+        }
+
+        if (!userStorage.checkId(friendId)) {
+            log.warn("Пользователь с id = {}, не найден", friendId);
+            throw new NotFoundException("Пользователь с id = " + userId + " не найден");
+        }
         log.info("Обработка GET-запроса на получение общих фильмов по айди двух пользователей.");
         return filmStorage.findCommonFilms(userId, friendId);
     }
@@ -144,6 +159,10 @@ public class FilmService {
 
     public void deleteFilm(Long filmId) {
         log.info("Обработка DELETE-запрос на удаление фильма");
+        if (!filmStorage.checkId(filmId)) {
+            log.warn("Фильм с id = {}, не найден", filmId);
+            throw new NotFoundException("Фильм с id = " + filmId + " не найден");
+        }
         filmStorage.deleteFilm(filmId);
     }
 

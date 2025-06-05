@@ -4,8 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.model.Feed;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.DTO.FeedDTO;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 
@@ -32,7 +32,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}/feed")
-    public Collection<FeedDTO> getFeed(@PathVariable Long id) {
+    public Collection<Feed> getFeed(@PathVariable Long id) {
         log.info("Получен GET-запроса на получение событий пользователя с id {}.", id);
         return userService.getFeeds(id);
     }

@@ -7,9 +7,8 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.dal.BaseRepository;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Director;
-import ru.yandex.practicum.filmorate.storage.interfaceStorage.DirectorStorage;
+import ru.yandex.practicum.filmorate.storage.interfacestorage.DirectorStorage;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
@@ -26,7 +25,6 @@ public class DirectorRepository extends BaseRepository<Director> implements Dire
     private static final String CHECK_DIRECTOR_ID = "SELECT COUNT(*) FROM director WHERE id = ?";
     private static final String DELETE_DIRECTOR_QUERY = "DELETE FROM director WHERE id=?";
     private static final String DELETE_FILM_DIRECTOR_QUERY = "DELETE FROM film_director WHERE director_id=?";
-    private static final String DELETE_DIRECTOR_FROM_FILM_QUERY = "DELETE FROM film_director WHERE director_id=?";
 
     public DirectorRepository(JdbcTemplate jdbc, RowMapper<Director> mapper) {
         super(jdbc, mapper);
@@ -34,8 +32,7 @@ public class DirectorRepository extends BaseRepository<Director> implements Dire
 
     @Override
     public Optional<Director> findDirectorById(Long id) {
-        Optional<Director> thisDirector = findOne(FIND_BY_ID_QUERY, id);
-        return thisDirector;
+        return findOne(FIND_BY_ID_QUERY, id);
     }
 
     @Override
@@ -66,10 +63,6 @@ public class DirectorRepository extends BaseRepository<Director> implements Dire
     public Director update(Director director) {
         log.debug("Обновление режиссера {} в репозитории", director);
 
-        if (!checkId(director.getId())) {
-            throw new NotFoundException("Режиссер с id = " + director.getId() + " не найден");
-        }
-
         jdbc.update(
                 UPDATE_DIRECTOR_QUERY,
                 director.getName(),
@@ -90,11 +83,5 @@ public class DirectorRepository extends BaseRepository<Director> implements Dire
         log.debug("Запрос удаления режиссера (Id: {}).", id);
         delete(DELETE_FILM_DIRECTOR_QUERY, id);
         delete(DELETE_DIRECTOR_QUERY, id);
-    }
-
-    @Override
-    public void deleteDirectorFromFilm(Long directorId, Long filmId) {
-        log.debug("Запрос удаления режиссера (Id: {}) с фильма (Id: {}).", directorId, filmId);
-        delete(DELETE_DIRECTOR_FROM_FILM_QUERY, directorId, filmId);
     }
 }

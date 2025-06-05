@@ -9,19 +9,18 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.dal.BaseRepository;
 import ru.yandex.practicum.filmorate.dal.feed.FeedRepository;
-import ru.yandex.practicum.filmorate.model.Feed;
-import ru.yandex.practicum.filmorate.storage.interfaceStorage.ReviewStorage;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.storage.interfacestorage.ReviewStorage;
 import ru.yandex.practicum.filmorate.model.Review;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Slf4j
 @Repository
 public class ReviewRepository extends BaseRepository<Review> implements ReviewStorage {
-
-    private final FeedRepository feedRepository;
 
     private static final String CREATE_REVIEW = """
         INSERT INTO reviews (content, is_positive, user_id, film_id, useful)
@@ -44,8 +43,9 @@ public class ReviewRepository extends BaseRepository<Review> implements ReviewSt
     """;
 
     private static final String INSERT_REVIEW_RATING = """
-        INSERT INTO review_likes (review_id, user_id, is_like)
-        VALUES (?, ?, ?)
+        MERGE INTO review_likes (review_id, user_id, is_like)
+                KEY (review_id, user_id)
+                VALUES (?, ?, ?);
     """;
 
 
@@ -74,7 +74,6 @@ public class ReviewRepository extends BaseRepository<Review> implements ReviewSt
 
     public ReviewRepository(JdbcTemplate jdbc, RowMapper<Review> mapper, FeedRepository feedRepository) {
         super(jdbc, mapper);
-        this.feedRepository = feedRepository;
     }
 
     @Override
@@ -91,11 +90,8 @@ public class ReviewRepository extends BaseRepository<Review> implements ReviewSt
             return ps;
         }, keyHolder);
 
-        Long id = keyHolder.getKey().longValue();
-        Review newRewiew = findById(id).orElseThrow();
-        log.info("Пользователь ({}) оставил отзыв, добавление в базу данных: добавление отзыва ({})", review.getUserId(), id);
-        feedRepository.create(new Feed(newRewiew.getUserId(), newRewiew.getReviewId(), 2L, 1L));
-        return findById(id).orElseThrow();
+        review.setReviewId(Objects.requireNonNull(keyHolder.getKey()).longValue());
+        return review;
     }
 
 
@@ -106,16 +102,11 @@ public class ReviewRepository extends BaseRepository<Review> implements ReviewSt
                 review.getIsPositive(),
                 review.getReviewId()
         );
-        Review newRewiew = findById(review.getReviewId()).orElseThrow();
-        log.info("Пользователь ({}) обновил отзыв, добавление в базу данных: добавление отзыва ({})", review.getUserId(), review.getReviewId());
-        feedRepository.create(new Feed(newRewiew.getUserId(), newRewiew.getReviewId(), 2L, 2L));
-        return newRewiew;
+        return findById(review.getReviewId()).orElseThrow(() -> new NotFoundException("Отзыв не найден"));
     }
 
     @Override
     public void delete(Long id) {
-        Review newRewiew = findById(id).orElseThrow();
-        feedRepository.create(new Feed(newRewiew.getUserId(), newRewiew.getReviewId(), 2L, 3L));
         jdbc.update(DELETE_REVIEW, id);
     }
 
@@ -136,8 +127,6 @@ public class ReviewRepository extends BaseRepository<Review> implements ReviewSt
 
     @Override
     public void putLike(Long reviewId, Long userId) {
-        jdbc.update(DELETE_DISLIKE, reviewId, userId);
-
         if (!hasAlreadyRated(reviewId, userId, true)) {
             jdbc.update(INSERT_REVIEW_RATING, reviewId, userId, true);
             jdbc.update(UPDATE_USEFUL_PLUS, reviewId);
@@ -146,8 +135,6 @@ public class ReviewRepository extends BaseRepository<Review> implements ReviewSt
 
     @Override
     public void putDisLike(Long reviewId, Long userId) {
-        jdbc.update(DELETE_LIKE, reviewId, userId);
-
         if (!hasAlreadyRated(reviewId, userId, false)) {
             jdbc.update(INSERT_REVIEW_RATING, reviewId, userId, false);
             jdbc.update(UPDATE_USEFUL_MINUS, reviewId);

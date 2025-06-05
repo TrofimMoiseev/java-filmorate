@@ -35,14 +35,8 @@ public class FilmController { //работа с запросами
     public Collection<Film> findPopular(@RequestParam(required = false, defaultValue = "10") Integer count,
                                         @RequestParam(required = false) Integer genreId,
                                         @RequestParam(required = false) Integer year) {
-
-        if (year == null) {
-            log.info("Параметр year не передан — фильтрация по году не применяется.");
-        }
         log.info("GET /films/popular: Получение {} популярных фильмов. Жанр: {}, Год: {}", count, genreId, year);
-        Collection<Film> films = filmService.findPopular(count, genreId, year);
-        log.info("GET /films/popular: Возвращено {} популярных фильмов.", films.size());
-        return films;
+        return filmService.findPopular(count, genreId, year);
     }
 
     @ResponseStatus(HttpStatus.CREATED)
@@ -69,7 +63,6 @@ public class FilmController { //работа с запросами
     }
 
     @DeleteMapping("/{id}/like/{userId}")
-    //@ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteLike(
             @PathVariable("id") Long filmId,
             @PathVariable Long userId
