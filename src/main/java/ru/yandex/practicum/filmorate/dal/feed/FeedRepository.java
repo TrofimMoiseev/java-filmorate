@@ -8,7 +8,6 @@ import ru.yandex.practicum.filmorate.dal.BaseRepository;
 import ru.yandex.practicum.filmorate.model.Feed;
 
 import java.sql.PreparedStatement;
-import java.util.Collection;
 import java.util.List;
 
 @Slf4j
