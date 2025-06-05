@@ -7,27 +7,32 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.dal.BaseRepository;
+import ru.yandex.practicum.filmorate.dal.feed.FeedRepository;
+import ru.yandex.practicum.filmorate.dal.film.FilmRepository;
 import ru.yandex.practicum.filmorate.dal.friendship.FriendshipRepository;
+import ru.yandex.practicum.filmorate.model.Feed;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.interfaceStorage.UserStorage;
+import ru.yandex.practicum.filmorate.storage.interfacestorage.UserStorage;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @Slf4j
 @Repository
 public class UserRepository extends BaseRepository<User> implements UserStorage {
 
-    FriendshipRepository friendshipRepository;
+    private final FriendshipRepository friendshipRepository;
+    private final FeedRepository feedRepository;
+    private final FilmRepository filmRepository;
 
-    public UserRepository(JdbcTemplate jdbc, RowMapper<User> mapper, FriendshipRepository friendshipRepository) {
+    public UserRepository(JdbcTemplate jdbc, RowMapper<User> mapper, FriendshipRepository friendshipRepository, FeedRepository feedRepository, FilmRepository filmRepository) {
         super(jdbc, mapper);
         this.friendshipRepository = friendshipRepository;
+        this.feedRepository = feedRepository;
+        this.filmRepository = filmRepository;
     }
 
     private static final String FIND_ALL_QUERY = "SELECT * FROM users";
@@ -36,6 +41,19 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
     private static final String INSERT_QUERY = "INSERT INTO users(login, name, email, birthday)" +
             "VALUES (?, ?, ?, ?)";
     private static final String UPDATE_QUERY = "UPDATE users SET email = ?, login = ?, name = ?, birthday = ? WHERE id = ?";
+    private static final String DELETE_QUERY = "DELETE FROM users WHERE id = ?";
+
+    private static final String FIND_COMMON_LIKES_USERS = """
+        SELECT u.*
+        FROM likes l1
+        JOIN likes l2 ON l1.film_id = l2.film_id
+        JOIN users u ON l2.user_id = u.id
+        WHERE l1.user_id = ?
+        AND u.id != ?
+        GROUP BY u.id
+        ORDER BY COUNT(*) DESC
+        LIMIT 10
+    """;
 
     @Override
     public List<User> findAll() {
@@ -59,6 +77,11 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
     }
 
     @Override
+    public List<Feed> getFeeds(Long id) {
+        return feedRepository.getFeeds(id);
+    }
+
+    @Override
     public User create(User user) {
         log.debug("Запрос на добавления пользователя ({}) в базу данных", user);
         KeyHolder keyHolder = new GeneratedKeyHolder();
@@ -77,13 +100,13 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
 
     @Override
     public User update(User user) {
-        log.info("Запрос на бновление пользователя в базе данных: email={}, login={}, name={}, birthday={}, id={}",
+        log.info("Запрос на обновление пользователя в базе данных: email={}, login={}, name={}, birthday={}, id={}",
                 user.getEmail(), user.getLogin(), user.getName(), Date.valueOf(user.getBirthday()), user.getId());
 
         update(UPDATE_QUERY,
+                user.getEmail(),
                 user.getLogin(),
                 user.getName(),
-                user.getEmail(),
                 Date.valueOf(user.getBirthday()),
                 user.getId());
         log.debug("Пользователь ({}) обновлен в базе данных", user.getId());
@@ -103,7 +126,30 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
     }
 
     @Override
+    public void deleteUser(Long userId) {
+        log.debug("Запрос удаления пользователя в хранилище");
+        delete(DELETE_QUERY, userId);
+    }
+
+    public List<User> findSimilarUsers(Long userId) {
+        return findMany(FIND_COMMON_LIKES_USERS, userId, userId);
+    }
+
+    @Override
     public boolean checkId(Long id) {
         return checkId(CHECK_USER_ID, id);
+    }
+
+    public List<Film> findRecommendedFilmsForUser(Long userId) {
+        List<User> similarUsers = findSimilarUsers(userId);
+
+        if (similarUsers.isEmpty()) {
+            log.info("Похожих пользователей не найдено для пользователя с id={}", userId);
+            return Collections.emptyList();
+        }
+
+        Long similarUserId = similarUsers.get(0).getId();
+
+        return filmRepository.findRecommendationsByUser(similarUserId, userId);
     }
 }

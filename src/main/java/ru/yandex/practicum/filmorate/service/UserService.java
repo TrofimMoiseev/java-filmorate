@@ -4,14 +4,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import ru.yandex.practicum.filmorate.dal.feed.FeedRepository;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
-import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.interfaceStorage.UserStorage;
+import ru.yandex.practicum.filmorate.model.*;
+import ru.yandex.practicum.filmorate.storage.interfacestorage.UserStorage;
 
 import java.time.LocalDate;
-import java.util.Collection;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -19,14 +20,15 @@ import java.util.Collection;
 public class UserService {
 
     private final UserStorage userStorage;
+    private final FeedRepository feedRepository;
 
     public User findUserById(Long id) {
         log.info("Обработка GET-запроса на получение пользователя по id.");
 
         return userStorage.findUserById(id)
                 .orElseThrow(() -> {
-                        log.warn("Фильм с id = {} не найден", id);
-        return new NotFoundException("Фильм с id = " + id + " не найден");
+                        log.warn("Пользователь с id = {} не найден", id);
+        return new NotFoundException("Пользователь с id = " + id + " не найден");
                 });
     }
 
@@ -77,8 +79,8 @@ public class UserService {
 
         User user = userStorage.findUserById(newUser.getId())
                 .orElseThrow(() -> {
-                    log.warn("Фильм с id = {} не найден", newUser.getId());
-                    return new NotFoundException("Фильм с id = " + newUser.getId() + " не найден");
+                    log.warn("Пользователь с id = {} не найден", newUser.getId());
+                    return new NotFoundException("Пользователь с id = " + newUser.getId() + " не найден");
                 });
 
         if (newUser.getEmail() != null && !newUser.getEmail().isBlank() && !newUser.getEmail().equals(user.getEmail())) {
@@ -100,7 +102,7 @@ public class UserService {
         if (newUser.getBirthday() != null && !newUser.getBirthday().isAfter(LocalDate.now())) {
             user.setBirthday(newUser.getBirthday());
         }
-        return userStorage.update(newUser);
+        return userStorage.update(user);
     }
 
     public void putFriend(Long userId, Long friendId) {
@@ -112,6 +114,7 @@ public class UserService {
             throw new NotFoundException("Пользователь с id = " + friendId + " не найден");
         }
 
+        feedRepository.create(new Feed(userId, friendId, EventType.FRIEND, Operation.ADD));
         userStorage.putFriend(userId, friendId);
         log.info("Пользователь с ID = {} добавил в друзья пользователя с ID = {}", userId, friendId);
     }
@@ -125,8 +128,32 @@ public class UserService {
             throw new NotFoundException("Пользователь с id = " + friendId + " не найден");
         }
 
+        feedRepository.create(new Feed(userId, friendId, EventType.FRIEND, Operation.REMOVE));
         userStorage.deleteFriend(userId, friendId);
         log.info("Пользователь с ID = {} удалил из друзей пользователя с ID = {}", userId, friendId);
+    }
+
+    public void deleteUser(Long userId) {
+        log.info("Получен Delete-запрос на удаление пользователя");
+        if (!userStorage.checkId(userId)) {
+            throw new NotFoundException("Пользователь с id = " + userId + " не найден");
+        }
+        userStorage.deleteUser(userId);
+    }
+
+    public Collection<Film> getRecommendations(Long userId) {
+        if (!userStorage.checkId(userId)) {
+            log.warn("Пользователь с id={} не найден", userId);
+            throw new NotFoundException("Пользователь с id=" + userId + " не найден");
+        }
+        return userStorage.findRecommendedFilmsForUser(userId);
+    }
+
+    public Collection<Feed> getFeeds(Long id) {
+        if (!userStorage.checkId(id)) {
+            throw new NotFoundException("Пользователь с id = " + id + " не найден");
+        }
+        return userStorage.getFeeds(id);
     }
 
     private void check(User newUser) {

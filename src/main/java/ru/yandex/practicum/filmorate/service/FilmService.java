@@ -2,13 +2,18 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dal.feed.FeedRepository;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.EventType;
+import ru.yandex.practicum.filmorate.model.Feed;
 import ru.yandex.practicum.filmorate.model.Film;
 import lombok.extern.slf4j.Slf4j;
-import ru.yandex.practicum.filmorate.storage.interfaceStorage.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.interfaceStorage.UserStorage;
+import ru.yandex.practicum.filmorate.model.Operation;
+import ru.yandex.practicum.filmorate.storage.interfacestorage.DirectorStorage;
+import ru.yandex.practicum.filmorate.storage.interfacestorage.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.interfacestorage.UserStorage;
 
 import java.time.LocalDate;
 import java.time.Month;
@@ -18,10 +23,12 @@ import java.util.Collection;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class FilmService { //логика обработки запросов
+public class FilmService {
 
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
+    private final DirectorStorage directorStorage;
+    private final FeedRepository feedRepository;
 
     public Film findFilmById(Long id) {
         log.info("Обработка GET-запроса на получение фильма по айди.");
@@ -37,9 +44,17 @@ public class FilmService { //логика обработки запросов
         return filmStorage.findAll();
     }
 
-    public Collection<Film> findPopular(int count) {
-        log.info("Обработка GET-запроса на получение популярных фильмов.");
-        return filmStorage.findPopular(count);
+    public Collection<Film> findPopular(int count, Integer genreId, Integer year) {
+        return filmStorage.findPopular(count, genreId, year);
+    }
+
+    public Collection<Film> findFilmsByDirectorId(Long id, String sortBy) {
+        log.info("Обработка GET-запроса на получение фильмов по айди режиссера.");
+        if (directorStorage.findDirectorById(id).isEmpty()) {
+            log.warn("Режиссер с id = {} не найден", id);
+            throw new NotFoundException("Режиссер с id = " + id + " не найден");
+        }
+        return filmStorage.findFilmsByDirectorId(id, sortBy);
     }
 
     public Film create(Film film) {
@@ -70,13 +85,24 @@ public class FilmService { //логика обработки запросов
         }
 
         if (newFilm.getReleaseDate() != null &&
-                !newFilm.getReleaseDate().isBefore(LocalDate.of(1895, Month.DECEMBER, 28)) &&
-                !newFilm.getReleaseDate().isAfter(LocalDate.now())) {
+                !newFilm.getReleaseDate().isBefore(LocalDate.of(1895, Month.DECEMBER, 28))) {
             film.setReleaseDate(newFilm.getReleaseDate());
         }
 
         if (newFilm.getDuration() != null && newFilm.getDuration() > 0) {
             film.setDuration(newFilm.getDuration());
+        }
+
+        if (newFilm.getMpa() != null) {
+            film.setMpa(newFilm.getMpa());
+        }
+
+        if (newFilm.getGenres() != null) {
+            film.setGenres(newFilm.getGenres());
+        }
+
+        if (newFilm.getDirectors() != null) {
+            film.setDirectors(newFilm.getDirectors());
         }
         return filmStorage.update(film);
     }
@@ -92,6 +118,7 @@ public class FilmService { //логика обработки запросов
             throw new NotFoundException("Пользователь с id = " + userId + " не найден");
         }
 
+        feedRepository.create(new Feed(userId, filmId, EventType.LIKE, Operation.ADD));
         log.info("Лайк поставлен фильму с id {}.", filmId);
         filmStorage.putLike(userId, filmId);
     }
@@ -106,10 +133,37 @@ public class FilmService { //логика обработки запросов
             log.warn("Пользователь с id = {}, не найден", userId);
             throw new NotFoundException("Пользователь с id = " + userId + " не найден");
         }
-
-
+        feedRepository.create(new Feed(userId, filmId, EventType.LIKE, Operation.REMOVE));
         log.info("Лайк фильму с id {}, удален.", filmId);
         filmStorage.deleteLike(userId, filmId);
+    }
+
+    public Collection<Film> findCommonFilms(Long userId, Long friendId) {
+        if (!userStorage.checkId(userId)) {
+            log.warn("Пользователь с id = {}, не найден", userId);
+            throw new NotFoundException("Пользователь с id = " + userId + " не найден");
+        }
+
+        if (!userStorage.checkId(friendId)) {
+            log.warn("Пользователь с id = {}, не найден", friendId);
+            throw new NotFoundException("Пользователь с id = " + userId + " не найден");
+        }
+        log.info("Обработка GET-запроса на получение общих фильмов по айди двух пользователей.");
+        return filmStorage.findCommonFilms(userId, friendId);
+    }
+
+    public Collection<Film> findFilmsDirectorsByQuery(String query, String by) {
+        log.info("Обработка GET-запроса на поиск фильмов, режиссеров по ключевому слову.");
+        return filmStorage.findFilmsDirectorsByQuery(query, by);
+    }
+
+    public void deleteFilm(Long filmId) {
+        log.info("Обработка DELETE-запрос на удаление фильма");
+        if (!filmStorage.checkId(filmId)) {
+            log.warn("Фильм с id = {}, не найден", filmId);
+            throw new NotFoundException("Фильм с id = " + filmId + " не найден");
+        }
+        filmStorage.deleteFilm(filmId);
     }
 
     private void check(Film film) {
@@ -120,8 +174,7 @@ public class FilmService { //логика обработки запросов
             log.warn("Валидация не пройдена — описание превышает 200 символов");
             throw new ValidationException("Количество символов превышает допустимое количество");
         } else if (film.getReleaseDate() == null ||
-                film.getReleaseDate().isBefore(LocalDate.of(1895, Month.DECEMBER, 28)) ||
-                film.getReleaseDate().isAfter(LocalDate.now())) {
+                film.getReleaseDate().isBefore(LocalDate.of(1895, Month.DECEMBER, 28))) {
             log.warn("Валидация не пройдена — слишком старая дата релиза: {}", film.getReleaseDate());
             throw new ValidationException("Дата релиза указана неверно");
         } else if (film.getDuration() == null || film.getDuration() <= 0) {

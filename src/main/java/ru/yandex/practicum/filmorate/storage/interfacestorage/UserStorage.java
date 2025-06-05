@@ -1,8 +1,11 @@
-package ru.yandex.practicum.filmorate.storage.interfaceStorage;
+package ru.yandex.practicum.filmorate.storage.interfacestorage;
 
+import ru.yandex.practicum.filmorate.model.Feed;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 public interface UserStorage {
@@ -24,4 +27,13 @@ public interface UserStorage {
     void deleteFriend(Long userId, Long friendId);
 
     Collection<User> getCommonFriends(Long userId, Long friendId);
+
+    List<Feed> getFeeds(Long id);
+
+    List<User> findSimilarUsers(Long userId);
+
+    List<Film> findRecommendedFilmsForUser(Long userId);
+
+    void deleteUser(Long userId);
+
 }
